@@ -6,10 +6,10 @@ def generateSpaceApi(status,coffeMade) :
 	spaceOpen    = "" 
 	spaceMessage = ""
 	if status == True :
-		spaceOpen    = "true" 
+		spaceOpen    = True 
 		spaceMessage = "Making"
 	else:
-		spaceOpen    = "false" 
+		spaceOpen    = False 
 		spaceMessage = "Off"
 
 	data = {
@@ -32,9 +32,8 @@ def generateSpaceApi(status,coffeMade) :
 		}, 
 		"sensors": {
 			"coffe_machine0":
-				{
-					"coffe_made": coffeMade
-				}
+				[{"name"  : "Coffe made",
+				 "value" : coffeMade}]
 		},		
 		"location": {
 			"lat": 40.403600, 
@@ -46,3 +45,5 @@ def generateSpaceApi(status,coffeMade) :
 	import json
 	with open('status.json', 'w') as outfile:
 		json.dump(data, outfile)
+
+#generateSpaceApi(False,100)
