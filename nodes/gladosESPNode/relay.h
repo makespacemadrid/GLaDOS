@@ -1,7 +1,9 @@
 #ifndef RELAY_H
 #define RELAY_H
 
-class relay
+#include "gladosMQTTNode.h"
+
+class relay : public nodeComponent
 {
   public:
     relay(int pin = -1)
@@ -53,7 +55,7 @@ class relay
 
     void setStatus(bool status)
     {
-        if(!isValid() || !m_enabled) return;
+        if(!isValid()) return;
         m_status = status;
 
         if(m_invertedLogic)

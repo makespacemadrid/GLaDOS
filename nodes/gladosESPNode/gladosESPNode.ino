@@ -19,10 +19,11 @@
 #include "espweb.h"
 #include "gladosMQTTNode.h"
 #include "makeSwitchNode.h"
+#include "lightControlNode.h"
 
 
 
-makeSwitchNode node("MakeSwitch","192.168.10.10");
+lightControl node("lightControl","192.168.10.10");
 
 
 void subCallback(char* topic, byte* payload, unsigned int length) 

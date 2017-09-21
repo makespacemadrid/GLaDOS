@@ -2,7 +2,7 @@ def generateSpaceApi(status,coffeMade) :
 
 	import time
 	lastChange   = int(time.time())
-	imgPaths     = "http://makespacemadrid.sytes.net/spaceapi"
+	imgPaths     = "http://makespacemadrid.org/spaceapi"
 	spaceOpen    = "" 
 	spaceMessage = ""
 	if status == True :
