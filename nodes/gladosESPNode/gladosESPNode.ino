@@ -20,10 +20,13 @@
 #include "gladosMQTTNode.h"
 #include "makeSwitchNode.h"
 #include "lightControlNode.h"
+#include "coffeMakerNode.h"
 
 
 
-lightControl node("lightControl","192.168.10.10");
+coffeMakerNode node("coffeMaker", "192.168.10.10");
+//makeSwitchNode node("makeSwitch","192.168.10.10");
+//lightControl node("lightControl","192.168.10.10");
 
 
 void subCallback(char* topic, byte* payload, unsigned int length) 

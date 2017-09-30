@@ -96,18 +96,19 @@ public:
 		WiFiManager wifiManager;
 		//exit after config instead of connecting
 		wifiManager.setBreakAfterConfig(true);
+    wifiManager.setTimeout(30);
 		//reset settings - for testing
 		//wifiManager.resetSettings();
 		//tries to connect to last known settings
 		//if it does not connect it starts an access point with the specified name
 		//here  "AutoConnectAP" with password "password"
 		//and goes into a blocking loop awaiting configuration
-		if (!wifiManager.autoConnect(m_nodeID.c_str(), "configureme")) {
+		while (!wifiManager.autoConnect(m_nodeID.c_str(), "configureme")) {
 			Serial.print("Cannot connect wireless. Config network: "); Serial.print(m_nodeID); Serial.print(" / "); Serial.println("configureme");
 			wifiConfigMode();
-			delay(3000);
-			ESP.reset();
-			delay(5000);
+			//delay(3000);
+		  //ESP.reset();
+			//delay(5000);
 		}
 		
 		wifiConnected();
