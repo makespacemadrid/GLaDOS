@@ -8,7 +8,7 @@ from threading import Timer
 from generateSpaceApiJson import generateSpaceApi
 
 
-mqttServer = "localhost"
+mqttServer = "10.0.1.100"
 mqttPort   = 1883
 nodeName   = "server"
 
@@ -22,7 +22,7 @@ commandClose 			= "echo Aqui el comando para cerrar!"
 commandUpdateSpaceApi 	= "echo Aqui el comando para actualizar el json"
 
 
-coffe_made   = 100
+coffe_made   = 666
 
 
 def openSpace():
@@ -67,12 +67,32 @@ def publishSystemStats():
 		mqttClient.publish("node/"+nodeName+"/system/cpuUsage", psutil.cpu_percent(interval=1))
 	except:
 		pass
+
+	try:
+		mem = psutil.virtual_memory().available
+		print(mem)
+		mqttClient.publish("node/"+nodeName+"/system/availableMemmory", str(mem))
+	except:
+		pass
+
+	try:
+		mqttClient.publish("node/"+nodeName+"/system/cpuUsage", psutil.cpu_percent(interval=1))
+	except:
+		pass
+
 	try:
 		mqttClient.publish("node/"+nodeName+"/system/temperatures", str(psutil.sensors_temperatures()))
 	except:
 		pass
+
 	try:	
 		mqttClient.publish("node/"+nodeName+"/system/diskUsage", str(psutil.disk_usage('/')[3]))
+	except:
+		pass
+	
+	try:
+		result = subprocess.check_output("docker ps | wc -l", shell=True)
+		mqttClient.publish("node/"+nodeName+"/system/dockerContainersRunning", int(result))
 	except:
 		pass
 
@@ -88,8 +108,8 @@ def subscribeTopics():
 	mqttClient.subscribe("space/powerStatus")
 	mqttClient.subscribe("space/status")
 	mqttClient.subscribe("space/reportStatusNomi")
-	mqttClient.subscribe("space/reportStatusSpaceApi")
-	
+	mqttClient.subscribe("space/reportStatusSpaceApi") 
+	mqttClient.subscribe("node/coffeMaker0/coffeMade")
 def on_connect(client, userdata, rc,arg):
 	print("Connected with result code "+str(rc))
 	mqttClient.publish("node/"+nodeName+"/system/status", "connected")
@@ -99,7 +119,7 @@ def on_connect(client, userdata, rc,arg):
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
 	global updateNomi
-	global updateSpaceApi
+	global updateSpaceApi9
 		
 	print("RCV: "+msg.topic + " - " +msg.payload)
 	
@@ -117,7 +137,8 @@ def on_message(client, userdata, msg):
 		updateNomi = msg.payload
 	elif msg.topic == "space/reportStatusSpaceApi":
 		updateSpaceApi = msg.payload
-
+	elif msg.topic == "node/coffeMaker0/coffeMade":
+		coffe_made = msg.payload
 
 def on_disconnect(client, userdata, rc):
 	print("Disconnected! rc: "+str(rc))

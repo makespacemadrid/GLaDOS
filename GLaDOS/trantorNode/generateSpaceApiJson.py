@@ -36,9 +36,9 @@ def generateSpaceApi(status,coffeMade) :
 				 "value" : coffeMade}]
 		},		
 		"location": {
-			"lat": 40.403600, 
-			"lon": -3.694596, 
-			"address": "Pedro Unanue 16 , 28045 Madrid, Spain"
+			"lat": 40.399525, 
+			"lon": -3.702446, 
+			"address": "Calle Arquitectura 18 , 28045 Madrid, Spain"
 		}, 
 	}
 
