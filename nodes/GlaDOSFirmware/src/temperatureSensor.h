@@ -10,17 +10,17 @@ public:
   {
 	m_id = "dhtSensor";
   }
-  
+
 	void setup()
 	{
 		dht.begin();
 	}
-	
+
 	void updateComponent()	{return;}
 
 	float temperature()   {return last_data.temperature;}
 	float humidity()	  {return last_data.relative_humidity;}
-	
+
 	void readComponent()
 	{
 		dht.temperature().getEvent(&last_data);
@@ -37,7 +37,7 @@ public:
 		ph.val	= last_data.relative_humidity;
 		m_publications.push_back(ph);
 	}
-	
+
 protected:
 	DHT_Unified      dht;
 	sensors_event_t  last_data;
@@ -45,17 +45,17 @@ protected:
 
 
 
-class ntc100kTemperatureSensor : public nodeComponent
+class ntc100k : public nodeComponent
 {
 public:
-  ntc100kTemperatureSensor(int pin)
+  ntc100k(int pin)
   {
 		m_pin = pin;
   }
 
   void setup()
   {
-
+    pinMode(m_pin,INPUT);
   }
 
   bool isValid()        {return true;}
@@ -63,12 +63,27 @@ public:
 
   uint16_t readRaw()
   {
-      return analogRead(m_pin);
+    return analogRead(m_pin);
   }
+
+	void readComponent()
+	{
+		mqttPublication pt;
+		pt.path  = m_topicPath;
+		pt.topic = "temperature";
+		pt.val	= readData();
+		m_publications.push_back(pt);
+	}
 
   virtual float      readData()
   {
-    return convertRead(readRaw());
+	  float result = readRaw();
+	  for(int i = 0 ; i < 50 ; i++)
+	  {
+		  result = (result + readRaw())/2.0;
+	  }
+
+    return convertRead(int(result));
   }
 
 
@@ -90,8 +105,8 @@ public:
       // convert the value to resistance
       average = 1023 / average - 1;
       average = SERIESRESISTOR / average;
-      Serial.print("Thermistor resistance ");
-      Serial.println(average);
+      //Serial.print("Thermistor resistance ");
+      //Serial.println(average);
 
       float steinhart;
       steinhart = average / THERMISTORNOMINAL;     // (R/Ro)
@@ -101,9 +116,9 @@ public:
       steinhart = 1.0 / steinhart;                 // Invert
       steinhart -= 273.15;                         // convert to C
 
-      Serial.print("Temperature ");
-      Serial.print(steinhart);
-      Serial.println(" *C");
+      //Serial.print("Temperature ");
+      //Serial.print(steinhart);
+      //Serial.println(" *C");
       return steinhart;
   }
 

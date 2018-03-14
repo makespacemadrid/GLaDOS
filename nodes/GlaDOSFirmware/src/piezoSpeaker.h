@@ -31,6 +31,7 @@ class piezoSpeaker : public nodeComponent
 
     void playTone(int freq =50,int toneDuration=100)
     {
+#ifndef ESP32
         if(isValid())
         {
             if( (freq > 0) && (toneDuration > 0))
@@ -44,13 +45,14 @@ class piezoSpeaker : public nodeComponent
                 delay(toneDuration);
             }
         }
+  #endif
     }
-    
+
     void beep()
     {
         playTone(50,75);
     }
-    
+
     void playRtttl(char *p)
     {
       // Absolutely no error checking in here
@@ -83,7 +85,7 @@ class piezoSpeaker : public nodeComponent
         if(num > 0) default_dur = num;
         p++;                   // skip comma
       }
-      
+
       // get default octave
       if(*p == 'o')
       {
@@ -105,7 +107,7 @@ class piezoSpeaker : public nodeComponent
         bpm = num;
         p++;                   // skip colon
       }
-    
+
       // BPM usually expresses the number of quarter notes per minute
       wholenote = (60 * 1000L / bpm) * 4;  // this is the time for whole note (in milliseconds)
 
@@ -118,7 +120,7 @@ class piezoSpeaker : public nodeComponent
         {
           num = (num * 10) + (*p++ - '0');
         }
-    
+
         if(num) duration = wholenote / num;
         else duration = wholenote / default_dur;  // we will need to check if we are a dotted note after
 
@@ -167,7 +169,7 @@ class piezoSpeaker : public nodeComponent
           duration += duration/2;
           p++;
         }
-  
+
         // now, get scale
         if(isdigit(*p))
         {

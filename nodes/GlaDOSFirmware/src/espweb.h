@@ -129,18 +129,7 @@ void handleFileList() {
 void startHttpFileServer(uint16_t port)
 {
 
-  SPIFFS.begin();
-  {
-    Dir dir = SPIFFS.openDir("/");
-    while (dir.next()) {
-      String fileName = dir.fileName();
-      size_t fileSize = dir.fileSize();
-      Serial.printf("FS File: %s, size: %s\n", fileName.c_str(), formatBytes(fileSize).c_str());
-    }
-    Serial.printf("\n");
-  }
-
-  fileServer = ESP8266WebServer(port);
+  //fileServer = ESP8266WebServer(port);
 
   //SERVER INIT
   //list directory
@@ -183,7 +172,7 @@ void startHttpFileServer(uint16_t port)
 
 void startHttpUpdater(uint16_t port)
 {
-    updateServer = ESP8266WebServer(port);
+    //updateServer = ESP8266WebServer(port);
     updateServer.on("/", HTTP_GET, [](){
       updateServer.sendHeader("Connection", "close");
       updateServer.sendHeader("Access-Control-Allow-Origin", "*");
@@ -222,4 +211,3 @@ void startHttpUpdater(uint16_t port)
 }
 
 #endif // ESPWIFI
-

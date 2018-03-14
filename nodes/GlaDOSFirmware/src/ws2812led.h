@@ -59,7 +59,7 @@ public:
       uint8_t m_b;
       float   m_bright;
     };
-  
+
   ws2812Strip(int pin = -1, int lednr = 25, float bright = 1.0) : m_pin(pin) ,nodeComponent(),  m_pixels(lednr, pin, NEO_GRB + NEO_KHZ800)
   {
     m_brightness = bright;
@@ -103,7 +103,7 @@ public:
     test();
     off();
   }
-  
+
   void updateComponent(){
     for(int i=0;i<m_leds.size();i++)
     {
@@ -113,7 +113,7 @@ public:
     }
 
     yield();
-    m_pixels.show(); 
+    m_pixels.show();
   }
 
   void off()
@@ -126,7 +126,7 @@ public:
   }
 
   void setColor(uint8_t r,uint8_t g, uint8_t b){
-    if(!isValid()) return;     
+    if(!isValid()) return;
     for(int i=0;i<m_leds.size();i++)
     {
       m_leds[i].setColor(r,g,b);
@@ -170,7 +170,7 @@ class ledGadget : public nodeComponent
     {
 
     }
-    
+
     void updateComponent()
     {
       animate();
@@ -251,13 +251,11 @@ class ledGadget : public nodeComponent
 
     virtual void setColor(uint8_t r, uint8_t g, uint8_t b)
     {
-
         resetAnimation();
         for(int i = 0 ; i < m_leds.size() ; i++)
         {
             m_leds[i]->setColor(r,g,b);
         }
-        m_strip->update();
     }
 
     void dimm(uint8_t power)
@@ -335,6 +333,24 @@ class ledGadget : public nodeComponent
         m_animationType = animationScroll;
     }
 
+    virtual void setProgress(uint8_t progress, uint8_t r = 0,uint8_t g = 100,uint8_t b = 0, bool centered = false)
+    {
+      if(centered)
+      {
+        setColor(0,0,0);
+        int lit = m_leds.size()*(progress/100.0);
+        for(int l = 0 ; (l < lit) && (l < m_leds.size()) ; l++)
+          m_leds[l]->setColor(r,g,b);
+      }
+      else
+      {
+        setColor(0,0,0);
+        int lit = m_leds.size()*(progress/100.0);
+        for(int l = 0 ; (l < lit) && (l < m_leds.size()) ; l++)
+          m_leds[l]->setColor(r,g,b);
+      }
+    }
+
 
     virtual void animate()
     {
@@ -366,6 +382,29 @@ class ledGadget : public nodeComponent
 
         m_strip->update();
     }
+
+    void wheel(int pos)
+    {
+      resetAnimation();
+      for(uint16_t i = 0;  i < m_leds.size() ; i++)
+      {
+          uint16_t WheelPos = 255 - (((i * 256 / m_leds.size()) + pos) & 255);
+          if(WheelPos < 85)
+          {
+              m_leds[i]->setColor(255 - WheelPos * 3, 0, WheelPos * 3);
+          }
+          else if(WheelPos < 170)
+          {
+              WheelPos -= 85;
+              m_leds[i]->setColor(0, WheelPos * 3, 255 - WheelPos * 3);
+          }
+          else
+          {
+              WheelPos -= 170;
+              m_leds[i]->setColor(WheelPos * 3, 255 - WheelPos * 3, 0);
+          }
+    }
+  }
 
 
   protected:
@@ -516,7 +555,6 @@ class ledGadget : public nodeComponent
         }
     }
 
-
     virtual void animateRainbow()
     {
         if(m_counter1 > 256*5) m_counter1 = 0;
@@ -540,7 +578,7 @@ class ledGadget : public nodeComponent
             }
             yield();
         }
-        m_counter1 += 10;
+        m_counter1 += 1;
     }
 
     virtual void animateScroll() {;}
@@ -549,7 +587,7 @@ class ledGadget : public nodeComponent
 class ledBar : public ledGadget
 {
 public:
-    ledBar(ws2812Strip* parentStrip) : ledGadget(parentStrip), m_reversed(false) 
+    ledBar(ws2812Strip* parentStrip) : ledGadget(parentStrip), m_reversed(false)
     {
     }
     void setReversed(bool reversed) {m_reversed = reversed;}
