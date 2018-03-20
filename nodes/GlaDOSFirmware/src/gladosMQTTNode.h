@@ -71,23 +71,19 @@ protected:
 class gladosMQTTNode
 {
 public:
-	gladosMQTTNode(String nodeID, String mqttServer, int port = 1883) : mqttClient(espClient)
+	gladosMQTTNode() : mqttClient(espClient)
 	{
-		m_nodeID = nodeID, m_server = mqttServer , m_port = port;
+		m_nodeID 	= storage.readConfig("nodeID"),
+		m_server 	= storage.readConfig("overmind") ,
+		m_port 		= storage.readConfig("overmindPort").toInt();
 
-	    m_lastHeartbeat = millis(), m_lastConnect = 0, m_lastCicleTime = 0,	m_avgCicleTime = 0;
+	  m_lastHeartbeat = millis(), m_lastConnect = 0, m_lastCicleTime = 0,	m_avgCicleTime = 0;
 		m_cicleDelay = 0; m_reconnectTimer = 10000;
 	}
 
 	void setup()
 	{
 		Serial.print("Configuring node... ID:"); Serial.println(m_nodeID);
-		storage.setup();
-		String be = storage.readConfig("bootError");
-		m_bootError = be.toInt();
-		m_bootError++;
-		storage.writeConfig("bootError", String(m_bootError));
-		Serial.print("Boot errors: ");Serial.println(m_bootError);
 
 		Serial.println("Init Components...");
 		yield();
@@ -99,50 +95,17 @@ public:
 #ifndef ESP32
 	  //WiFi.begin("JarvisNetwork", "jointheovermind");
 
-	//	delay(2500);
-//		Serial.println("Launching WifiManager..");
-//		yield();
-//		wifiDisconnected();
-//		serverDisconnected();
-		 //WiFiManager wifiManager;
-		//exit after config instead of connecting
-//		wifiManager.setBreakAfterConfig(true);
-//		wifiManager.setTimeout(60);
-		//reset settings - for testing
-		//wifiManager.resetSettings();
-		//tries to connect to last known settings
-		//if it does not connect it starts an access point with the specified name
-		//here  "AutoConnectAP" with password "password"
-		//and goes into a blocking loop awaiting configuration
-//		while (!wifiManager.autoConnect(m_nodeID.c_str(), "configureme")) {
-//			Serial.print("Cannot connect wireless. Config network: "); Serial.print(m_nodeID); Serial.print(" / "); Serial.println("configureme");
-//			wifiConfigMode();
-//			delay(30000);
-//		  ESP.reset();
-//			delay(5000);
-//		}
-
-if(m_bootError > 10)
+if(storage.readConfig("configMode") == "onReset")
 {
-	m_bootError = 0;
-	storage.writeConfig("bootError", "0");
-	Serial.println("Launching WifiManager..");
-	wifiConfigMode();
-	WiFiManager wifiManager;
-	wifiManager.setConfigPortalTimeout(120);
-	WiFiManagerParameter custom_mqtt_server("server", "mqtt_server","192.168.10.10", 40);
-	WiFiManagerParameter custom_mqtt_port("port", "mqtt_port","1883", 40);
-	wifiManager.addParameter(&custom_mqtt_server);
-	wifiManager.addParameter(&custom_mqtt_port);
-	if (!wifiManager.startConfigPortal(m_nodeID.c_str(), "configureme")) {
-		 Serial.println("failed to connect and hit timeout");
-		 delay(3000);
-		 //reset and try again, or maybe put it to deep sleep
-		 ESP.reset();
-		 delay(5000);
+	String be = storage.readConfig("bootError");
+	m_bootError = be.toInt();
+	m_bootError++;
+	storage.writeConfig("bootError", String(m_bootError));
+	Serial.print("Boot errors: ");Serial.println(m_bootError);
+	if(m_bootError > storage.readConfig("maxFailBootConfig").toInt())
+	{
+		launchConfigPortal();
 	}
-	Serial.print("mqtt host:");Serial.println(custom_mqtt_server.getValue());
-	Serial.print("mqtt port:");Serial.println(custom_mqtt_port.getValue());
 }
 
 		m_lastWifiStatus  = 0;
@@ -280,6 +243,46 @@ if(m_bootError > 10)
 
 	PubSubClient& MQTTClient() {return mqttClient;}
 
+	void launchConfigPortal()
+	{
+		m_bootError = 0;
+		storage.writeConfig("bootError", "0");
+		Serial.println("Launching WifiManager..");
+		wifiConfigMode();
+		WiFiManager wifiManager;
+		wifiManager.setConfigPortalTimeout(120);
+		WiFiManagerParameter custom_nodeID("nodeID", "node_id",storage.readConfig("nodeID").c_str(), 40);
+		WiFiManagerParameter custom_nodeType("nodeType", "node_type",storage.readConfig("nodeType").c_str(), 40);
+		WiFiManagerParameter custom_mqtt_server("server", "mqtt_server",storage.readConfig("overmind").c_str(), 40);
+		WiFiManagerParameter custom_mqtt_port("port", "mqtt_port",storage.readConfig("overmindPort").c_str(), 40);
+
+		wifiManager.addParameter(&custom_nodeID);
+		wifiManager.addParameter(&custom_nodeType);
+		wifiManager.addParameter(&custom_mqtt_server);
+		wifiManager.addParameter(&custom_mqtt_port);
+
+		if (!wifiManager.startConfigPortal(m_nodeID.c_str(), "configureme")) {
+			 Serial.println("failed to connect and hit timeout");
+			 delay(3000);
+			 //reset and try again, or maybe put it to deep sleep
+			 ESP.reset();
+			 delay(5000);
+		}
+		storage.writeConfig("nodeID",custom_nodeID.getValue());
+		storage.writeConfig("nodeType",custom_nodeType.getValue());
+		storage.writeConfig("overmind",custom_mqtt_server.getValue());
+		storage.writeConfig("overmindPort",custom_mqtt_port.getValue());
+
+		Serial.print("ID:");Serial.println(custom_nodeID.getValue());
+		Serial.print("type:");Serial.println(custom_nodeType.getValue());
+		Serial.print("mqtt host:");Serial.println(custom_mqtt_server.getValue());
+		Serial.print("mqtt port:");Serial.println(custom_mqtt_port.getValue());
+		yield();
+		delay(3000);
+		//reset and try again, or maybe put it to deep sleep
+		ESP.reset();
+		delay(5000);
+	}
 
 	void processTopic(char* topic, byte* payload, unsigned int length)
 	{

@@ -1,8 +1,19 @@
 #ifndef SPIFS_H
 #define SPIFS_H
 
-#define JSONCONFIGSIZE  200
-#define JSONAUTHSIZE    500
+#define JSONCONFIGSIZE  500
+#define JSONAUTHSIZE    1000
+
+WiFiUDP udp;
+EasyNTPClient ntpClient(udp, "es.pool.ntp.org");
+
+struct msmUserAccess
+{
+  String area     = "None";
+  String cardid   = "0000000000000000";
+  String nickname = "nobody";
+  int    level    = -1;
+};
 
 class settingsStorage
 {
@@ -62,6 +73,7 @@ class SPIFSStorage : public settingsStorage
 public:
   SPIFSStorage() : settingsStorage()
   {
+    setup();
   }
 
   void initSettings()
@@ -69,11 +81,25 @@ public:
     StaticJsonBuffer<JSONCONFIGSIZE> data;
     JsonObject& root = data.createObject();
     File f;
-    root["id"]            = "unamedNode";
-    root["nodeType"]      = "unconfiguredNode";
-    root["overmind"]      = "192.168.10.10";
-    root["authNode"]      = "true";
-    root["authJSONUrl"]   = "192.168.10.10:8000/userAuth.json";
+    root["nodeID"]            = "unamedNode";
+    root["nodeType"]          = "unconfiguredNode";
+    root["overmind"]          = "192.168.10.10";
+    root["overmindPort"]      = "1883";
+    root["authNode"]          = "false";
+    root["authServer"]        = "192.168.10.10:8000";
+    root["authArea"]          = "none";
+    root["updateServer"]      = "true";
+    root["updateServerPort"]  = "8080";
+    root["fileServer"]        = "true";
+    root["fileServerPort"]    = "8000";
+    root["otaupdate"]         = "true";
+    root["otaserver"]         = "192.168.10.10:8000";
+    root["configMode"]        = "onReset";
+    root["maxFailBootConfig"] = "10";
+    root["brainless"]         = "true";
+    root["globalShutdown"]    = "false";
+    root["configVersion"]     = "1";
+
 
     f = SPIFFS.open("/config.json", "w");
     root.printTo(f);
@@ -101,7 +127,7 @@ public:
       {
           Serial.println("spiffs FAIL!");
       }
-
+      udp.begin(123);
   }
 
   String formatBytes(size_t bytes){
@@ -140,11 +166,14 @@ public:
   			Serial.print(cfg.size());
   			Serial.println(" records found.");
         dumpConfig();
-        if(cfg["id"] != "")
-  			   return true;
+        String version = cfg["configVersion"];
+        if( version != "")
+        {
+            Serial.println("Found settings, version :"+version);
+        }
         else
         {
-          Serial.println("Found json but no id field");
+          Serial.println("Found json but np configVersion field");
           return false;
         }
 			}
@@ -160,11 +189,20 @@ public:
       return readConfig("authNode") == "true";
   }
 
-  void updateUserAuth()
+  bool updateUserAuth()
   {
+    bool updated = false;
+    updated = updated || updateAuthJSON("sideDoor");
+    updated = updated || updateAuthJSON("laser");
+    return updated;
+  }
+
+  bool updateAuthJSON(String name)
+  {
+    Serial.print("Updating "+name);
     StaticJsonBuffer<JSONAUTHSIZE>  data;
     int localVersion = 0;
-		File f = SPIFFS.open("/userAuth.json", "r");
+		File f = SPIFFS.open("/"+name+".json", "r");
 		if (f) {
 			size_t size = f.size();
 			if ( size == 0 ) {
@@ -178,26 +216,24 @@ public:
 					Serial.println("Parsing json failed !");
 				}
   			f.close();
-  			Serial.print(" Auth Config from SPIFFS loaded: ");
+  			Serial.print(name+" from SPIFFS loaded: ");
   			Serial.print(cfg.size());
   			Serial.println(" records found.");
         String version = cfg["version"];
         if(version != "")
   			   localVersion = version.toInt();
         else
-        {
           Serial.println("Found json but no version field");
-        }
 			}
 		} else
 		{
-			Serial.println("No authConfig File found!");
+			Serial.println("No"+name+" File found!");
 		}
     Serial.print("local auth version: ");Serial.println(localVersion);
 
     //String url = readConfig("authJSONUrl");
-    String url = "http://successbyfailure.org/userAuth.json";
-    Serial.println("Fetching last userAuth: "+url);
+    String url = readConfig("authServer")+"/"+name+".json";
+    Serial.println("Fetching last "+name+": " +url);
     HTTPClient http;
     http.begin(url);
     if(http.GET() == HTTP_CODE_OK) {
@@ -213,11 +249,12 @@ public:
         if(remoteVersion > localVersion)
         {
           Serial.println("updating....");
-          f = SPIFFS.open("/userAuth.json", "w");
+          f = SPIFFS.open("/"+name+".json", "w");
           cfg.printTo(f);
           cfg.prettyPrintTo(Serial);
           f.close();
           yield();
+          return true;
         }
       }
       else
@@ -227,9 +264,48 @@ public:
     }
     else
     {
-      Serial.println("Cannot get remote userAuth");
+      Serial.println("Cannot get remote "+name);
     }
+    return false;
   }
+
+  msmUserAccess userAuthLevel(String area, String cardid)
+  {
+    msmUserAccess msmUser;
+    msmUser.cardid = cardid;
+
+    StaticJsonBuffer<JSONAUTHSIZE>  data;
+		File f = SPIFFS.open("/"+area+".json", "r");
+		if (f) {
+			size_t size = f.size();
+			if ( size == 0 ) {
+				f.close();
+				return msmUser;
+			}else{
+				std::unique_ptr<char[]> buf (new char[size]);
+				f.readBytes(buf.get(), size);
+				JsonObject& cfg = data.parseObject(buf.get());
+				if (!cfg.success()) {
+					return msmUser;
+				}
+			  f.close();
+        JsonObject& user = cfg[cardid];
+        if (!user.success()) {
+          Serial.print("User not found");
+          return msmUser;
+        }
+        const char* u = user["u"];
+        const char* lev = user["l"];
+        msmUser.nickname = u;
+        msmUser.level    = String(lev).toInt();
+			  return msmUser;
+			}
+		} else
+		{
+			return msmUser;
+		}
+  }
+
 
 	void dumpConfig()
 	{

@@ -5,7 +5,7 @@
 class mqttLamp : public gladosMQTTNode
 {
 public:
-  mqttLamp(String nodeID, String mqttServer, int port = 1883) : gladosMQTTNode(nodeID,mqttServer,port),
+  mqttLamp() : gladosMQTTNode(),
   ledStrip(D4,100,0.8),leds(&ledStrip)
   {
     String str = "node/"+m_nodeID+"/";

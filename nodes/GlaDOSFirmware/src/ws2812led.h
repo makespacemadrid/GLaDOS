@@ -291,6 +291,32 @@ class ledGadget : public nodeComponent
         m_animationType = animationFade;
     }
 
+    virtual void instantFade()
+    {
+      animationType last = m_animationType;
+      fade();
+      while (m_animationType != animationNone)
+      {
+        animateFade();
+        m_strip->update();
+        delay(10);
+      }
+      m_animationType = last;
+    }
+
+    virtual void instantBlink(uint8_t r, uint8_t g, uint8_t b, uint times = 1,uint length = 250)
+    {
+      for(int t = 0 ; t<times ; t++)
+      {
+        setColor(r,g,b);
+        animate();
+        delay(length);
+        instantFade();
+        delay(100);
+      }
+    }
+
+
     virtual void glow()
     {
         resetAnimation();

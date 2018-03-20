@@ -18,7 +18,7 @@ class makeSwitchNode : public gladosMQTTNode
 {
 
 public:
-	makeSwitchNode(String nodeID, String mqttServer, int port = 1883) : gladosMQTTNode(nodeID,mqttServer,port),
+	makeSwitchNode() : gladosMQTTNode(),
 	mainSwitch(D0), speaker(D2) , dhtSensor(D1,DHT22) ,
 	ledStrip(D3,15,0.65), statusLeds(&ledStrip), onLeds(&ledStrip) , offLeds(&ledStrip)
 	{
@@ -37,15 +37,15 @@ public:
 		m_components.push_back(&statusLeds);
 		m_components.push_back(&onLeds);
 		m_components.push_back(&offLeds);
-		
+
 		debounceTimer = 0;
 	}
 
 	void setupNode()
 	{
-		
+
 	}
-	
+
 	void updateNode()
 	{
 
@@ -61,7 +61,7 @@ public:
 					speaker.playTone(100,50);
 					delay(25);
 					speaker.playTone(150,50);
-					
+
 				}
 				else
 				{
@@ -84,13 +84,13 @@ public:
 		{
 			powerOffDelay -= m_lastCicleTime;
 			beepTimer     -= m_lastCicleTime;
-			
+
 			if(beepTimer <= 0)
 			{
 				speaker.playTone(50,100);
 				beepTimer = 1000;
 			}
-			
+
 			if(powerOffDelay <= 0)
 			{
 				m_powerStatus = Off;
@@ -103,19 +103,19 @@ public:
 
 	virtual void wifiConnected()      {return;}
 
-	virtual void wifiDisconnected()   
+	virtual void wifiDisconnected()
 	{
 		onLeds.setColor (200,0,0);
 		offLeds.setColor(200,0,0);
 	}
 
-	virtual void wifiConfigMode()	  
+	virtual void wifiConfigMode()
 	{
 		onLeds.setColor (150,150,0);
 		offLeds.setColor(150,150,0);
 	}
 
-	virtual void serverConnected()    
+	virtual void serverConnected()
 	{
     if(mainSwitch.status())
       ledStatusOpen();
@@ -123,23 +123,23 @@ public:
       ledStatusClosed();
 	}
 
-	virtual void serverDisconnected() 
+	virtual void serverDisconnected()
 	{
 		onLeds.setColor (0,0,200);
 		offLeds.setColor(0,0,200);
-	}	
-	
+	}
+
 	void ledStatusOpen()
 	{
 		onLeds.setColor (0,200,0);
-		offLeds.off();		
+		offLeds.off();
 	}
-	
+
 	void ledStatusClosed()
 	{
 		onLeds.setColor (0,0,250);
 		offLeds.setColor(100,0,0);
-		onLeds.glow();		
+		onLeds.glow();
 	}
 
 	void ledStatusPowerOffRequest()
@@ -147,32 +147,32 @@ public:
 		speaker.playTone(50,250);
 		onLeds.setColor (200,200,0);
 		offLeds.setColor(200,0,0);
-		onLeds.glow();		
+		onLeds.glow();
 	}
 
-	virtual void globalPowerOn()	  	 
+	virtual void globalPowerOn()
 	{
 		statusLeds.setColor(0,200,00);
 		statusLeds.fade();
 		ledStatusOpen();
 	}
-	virtual void globalPowerOff()     	 
+	virtual void globalPowerOff()
 	{
 		statusLeds.setColor(200,0,0);
 		statusLeds.fade();
 		ledStatusClosed();
-		speaker.playRtttl("dead:d=4,o=4,b=300:4b4,4f5,4p,4f5,3f5,3e5,3d5,4c5");		
+		speaker.playRtttl("dead:d=4,o=4,b=300:4b4,4f5,4p,4f5,3f5,3e5,3d5,4c5");
 	}
-	
-	virtual void globalPowerOffRequest() 
+
+	virtual void globalPowerOffRequest()
 	{
 		ledStatusPowerOffRequest();
 		statusLeds.setColor(200,200,0);
 		statusLeds.glow();
 	}
-	
+
 protected:
-	
+
 	button 					mainSwitch;
 	piezoSpeaker 			speaker;
 	dhtTemperatureSensor 	dhtSensor;

@@ -14,7 +14,7 @@ enum powerStatus
 };
 
 public:
-	lightControl(String nodeID, String mqttServer, int port = 1883) : gladosMQTTNode(nodeID,mqttServer,port),
+	lightControl() : gladosMQTTNode(),
 	ledStrip(D7,15,0.65), statusLeds(&ledStrip),
 	relay1(D2),relay2(D1),relay3(D8)
 	{
@@ -27,16 +27,16 @@ public:
 		m_components.push_back(&relay1);
 		m_components.push_back(&relay2);
 		m_components.push_back(&relay3);
-		
+
 		debounceTimer = 0;
 		courtesyTimer = 0;
 	}
 
 	void setupNode()
 	{
-		
+
 	}
-	
+
 	void updateNode()
 	{
 
@@ -45,7 +45,7 @@ public:
 			debounceTimer = 50;
 			if(mainSwitch.status())
 			{
-				
+
 			}
 		}
 
@@ -62,28 +62,28 @@ public:
 
 	virtual void wifiConnected()      {return;}
 
-	virtual void wifiDisconnected()   
+	virtual void wifiDisconnected()
 	{
 
 	}
 
-	virtual void wifiConfigMode()	  
+	virtual void wifiConfigMode()
 	{
 
 	}
 
-	virtual void serverConnected()    
+	virtual void serverConnected()
 	{
 
 	}
 
-	virtual void serverDisconnected() 
+	virtual void serverDisconnected()
 	{
 
-	}	
-	
+	}
 
-	virtual void globalPowerOn()	  	 
+
+	virtual void globalPowerOn()
 	{
 		courtesyTimer = -1;
 		relay1.activate();
@@ -92,27 +92,27 @@ public:
 		statusLeds.setColor(0,200,00);
 		statusLeds.fade();
 	}
-	virtual void globalPowerOff()     	 
+	virtual void globalPowerOff()
 	{
 		relay3.activate();
 		courtesyTimer = 35000;
 		delay(200);
 		relay1.deactivate();
 		relay2.deactivate();
-		
+
 		statusLeds.setColor(200,0,0);
 		statusLeds.fade();
 	}
-	
-	virtual void globalPowerOffRequest() 
+
+	virtual void globalPowerOffRequest()
 	{
 		relay3.activate();
 		statusLeds.setColor(200,200,0);
 		statusLeds.glow();
 	}
-	
+
 protected:
-	
+
 	button 					mainSwitch;
 
 	ws2812Strip 	ledStrip;

@@ -1,5 +1,9 @@
 #include <FS.h>                   //this needs to be first, or it all crashes and burns...
 
+
+#include <sstream>
+
+
 #ifdef ESP8266
 #include <ESP8266WiFi.h>          //https://github.com/esp8266/Arduino
 //needed for library
@@ -10,6 +14,8 @@
 #include <DNSServer.h>
 #include "espweb.h"
 #include <WiFiManager.h>          //https://github.com/tzapu/WiFiManager
+#include <EasyNTPClient.h>
+#include <WiFiUdp.h>
 #elif ESP32
 #include <WiFi.h>
 #define D0 0
@@ -42,7 +48,17 @@
 #include "machineAccess.h"
 #include "doorControlNode.h"
 
-doorControlNode node("sideDoor","192.168.10.10");
+String getNodeType()
+{
+	SPIFSStorage s;
+	return s.readConfig("nodeType");
+}
+
+gladosMQTTNode* node;
+
+
+
+
 //coffeMakerNode node("coffeMaker0", "192.168.10.10");
 //makeSwitchNode node("makeSwitch","192.168.10.10");
 //lightControl node("lightControl","192.168.10.10");
@@ -50,7 +66,7 @@ doorControlNode node("sideDoor","192.168.10.10");
 
 void subCallback(char* topic, byte* payload, unsigned int length)
 {
-	node.processTopic(topic,payload,length);
+	node->processTopic(topic,payload,length);
 }
 
 void setup() {
@@ -58,11 +74,34 @@ void setup() {
   Serial.setTimeout(100);
   yield();
 	Serial.print("...\n");
-  node.setup();
-  node.MQTTClient().setCallback(subCallback);
+	String nodeType = getNodeType();
+	if(nodeType == "doorControlNode")
+	{
+		node = new doorControlNode();
+	}
+	else if(nodeType == "coffeMakerNode")
+	{
+		node = new coffeMakerNode();
+	}
+	else if(nodeType == "makeSwitchNode")
+	{
+		node = new makeSwitchNode();
+	}
+	else if(nodeType == "mqttLamp")
+	{
+		node = new mqttLamp();
+	}
+	else
+	{
+		node = new gladosMQTTNode();
+		node->launchConfigPortal();
+	}
+  node->setup();
+  node->MQTTClient().setCallback(subCallback);
+
 }
 
 int i = 0 ;
 void loop() {
-  node.update();
+  node->update();
 }

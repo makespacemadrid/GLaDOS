@@ -14,7 +14,7 @@ enum powerStatus
 };
 
 public:
-	coffeMakerNode(String nodeID, String mqttServer, int port = 1883) : gladosMQTTNode(nodeID,mqttServer,port),
+	coffeMakerNode() : gladosMQTTNode(),
 	coffeeSwitch(D0), ledStrip(D7,50,0.2), statusLeds(&ledStrip),leds(&ledStrip) ,tempSensor(A0),	heaterRelay(D6),pumpRelay(D3)
 	{
 		leds.addLed  (3,46);

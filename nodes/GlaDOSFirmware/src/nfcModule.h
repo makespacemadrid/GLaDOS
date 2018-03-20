@@ -1,6 +1,18 @@
 #ifndef RFIDMOD
 #define RFIDMOD
 
+void array_to_string(byte array[], unsigned int len, char buffer[])
+{
+    for (unsigned int i = 0; i < len; i++)
+    {
+        byte nib1 = (array[i] >> 4) & 0x0F;
+        byte nib2 = (array[i] >> 0) & 0x0F;
+        buffer[i*2+0] = nib1  < 0xA ? '0' + nib1  : 'A' + nib1  - 0xA;
+        buffer[i*2+1] = nib2  < 0xA ? '0' + nib2  : 'A' + nib2  - 0xA;
+    }
+    buffer[len*2] = '\0';
+}
+
 MFRC522 rfid(D8,D3);
 
 class nfcModule
@@ -12,13 +24,26 @@ public:
 
 	virtual void	  setup()									= 0;
 	virtual void	  readIdBytes(byte* dest) = 0;
+
 	virtual String  readCard()
 	{
-		byte id[8];
-		readIdBytes(id);
-		String val;
-		return val;
+		byte cardid[8];
+		char cardstr[9];
+
+		for(int i = 0 ; i < 8 ; i++)
+		{
+			cardid[i] = 0;
+		}
+		for(int i = 0 ; i < 9 ; i++)
+		{
+			cardstr[i] = 0;
+		}
+
+		readIdBytes(cardid);
+		array_to_string(cardid, 8, cardstr);
+		return String(cardstr);
 	}
+
 protected:
 
 };
