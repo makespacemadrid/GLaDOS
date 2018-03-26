@@ -5,7 +5,9 @@
 #include "nfcModule.h"
 #include "relay.h"
 
+#ifdef HARDCODED_CARDS
 #include "cards.h"
+#endif
 
 class doorControlNode : public gladosMQTTNode
 {
