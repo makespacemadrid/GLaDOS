@@ -1,0 +1,8 @@
+[submodule "old/Jarvis"]
+	path = old/Jarvis
+	url = https://github.com/MakeSpaceMadrid/Jarvis
+	branch = master
+[submodule "baseNodes/libreNode"]
+	path = baseNodes/libreNode
+	url = https://github.com/successbyfailure/libreNode
+	branch = master
