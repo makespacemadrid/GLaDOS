@@ -14,41 +14,40 @@ mqttServer = "10.0.0.10"
 mqttPort   = 1883
 nodeName   = "trantor"
 
-globalShutdown = False
-updateNomi     = "true"
-updateSpaceApi = "true"
-coffe_made     = 666
-temperature    = 42
-humidity       = 42
+globalShutdown  = False
+nomiEnabled     = "true"
+spaceApiEnabled = "true"
+coffe_made      = 666
+temperature     = 42
+humidity        = 42
 
+def updateSpaceApi():
+	global spaceApiEnabled
+	global temperature
+	global humidity
+	global coffe_made
+	if updateSpaceApi == "true" :
+		generateSpaceApi(True,temperature,humidity,coffe_made)
+		return_code = subprocess.call(commandUpdateSpaceApi,shell=True)	
 
 def openSpace():
-	global coffe_made
-	global updateNomi
-	global updateSpaceApi
+	global nomiEnabled
 	print("Espacio abierto")
-	generateSpaceApi(True,coffe_made)
-	print("UPDaTE: "+updateNomi+" "+updateSpaceApi)
-	if updateNomi == "true":
+	if nomiEnabled == "true":
 		return_code = subprocess.call(commandOpen,shell=True)
-	if updateSpaceApi == "true" :
-		return_code = subprocess.call(commandUpdateSpaceApi,shell=True)
+	updateSpaceApi()
+
 def closeSpace():
-	global coffe_made
-	global updateNomi
-	global updateSpaceApi
+	global nomiEnabled
 	print("Espacio cerrado")
-	generateSpaceApi(False,coffe_made)
-	print("UPDaTE: "+updateNomi+" "+updateSpaceApi)
-	if updateNomi == "true" :
+	if nomiEnabled == "true" :
 		return_code = subprocess.call(commandClose,shell=True)
-	if updateSpaceApi == "true" :
-		return_code = subprocess.call(commandUpdateSpaceApi,shell=True)
+	updateSpaceApi()
 
 def announceNomi(msg):
-	cmd = commandNomiAnnounce+urllib.quote(msg)
 	print("announce nomi: "+msg)
-	if updateNomi == "true" :
+	if nomiEnabled == "true" :
+		cmd = commandNomiAnnounce+urllib.quote(msg)
 		return_code = subprocess.call(cmd,shell=True)
 
 
@@ -108,7 +107,7 @@ def subscribeTopics():
 	mqttClient.subscribe("space/Nomi/announce")
 	mqttClient.subscribe("space/Nomi/enabled")
 	mqttClient.subscribe("space/spaceApi/enabled") 
-	mqttClient.subscribe("space/coffeMade")
+	mqttClient.subscribe("space/coffeeMade")
 	mqttClient.subscribe("space/temperature")
 	mqttClient.subscribe("space/humidity")
 def on_connect(client, userdata, rc,arg):
@@ -119,8 +118,8 @@ def on_connect(client, userdata, rc,arg):
 
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
-	global updateNomi
-	global updateSpaceApi
+	global nomiEnabled
+	global spaceApiEnabled
 	global coffe_made
 	global temperature
 	global humidity
@@ -131,15 +130,12 @@ def on_message(client, userdata, msg):
 		elif msg.payload == "Close" :
 			closeSpace()
 
-	elif (msg.topic == "space/powerStatus") and globalShutdown :
-		if msg.payload == "off" :
-			powerOffSystem()
 	elif (msg.topic == "space/Nomi/enabled"):
-		updateNomi = msg.payload
+		nomiEnabled = msg.payload
         elif (msg.topic == "space/Nomi/announce"):
 		announceNomi(msg.payload);
 	elif msg.topic == "space/spaceApi/enabled":
-		updateSpaceApi = msg.payload
+		spaceApiEnabled = msg.payload
 	elif msg.topic == "space/coffeMade":
 		coffe_made = msg.payload
 	elif msg.topic == "space/temperature":

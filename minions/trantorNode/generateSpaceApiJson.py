@@ -51,4 +51,4 @@ def generateSpaceApi(status,temperature,humidity,coffeMade) :
 	with open('status.json', 'w') as outfile:
 		json.dump(data, outfile)
 
-generateSpaceApi(False,26,20,100)
+#generateSpaceApi(False,26,20,100)
