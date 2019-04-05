@@ -14,32 +14,37 @@ mqttServer = "10.0.0.10"
 mqttPort   = 1883
 nodeName   = "trantor"
 
-globalShutdown  = False
 nomiEnabled     = "false"
 spaceApiEnabled = "false"
 coffe_made      = 666
 temperature     = 42
 humidity        = 42
+spaceOpen       = False
 
 def updateSpaceApi():
 	global spaceApiEnabled
 	global temperature
 	global humidity
 	global coffe_made
+	global spaceOpen
 	if spaceApiEnabled == "true" :
-		generateSpaceApi(True,temperature,humidity,coffe_made)
+		generateSpaceApi(spaceOpen,temperature,humidity,coffe_made)
 		return_code = subprocess.call(commandUpdateSpaceApi,shell=True)	
 
 def openSpace():
 	global nomiEnabled
+	global spaceOpen
 	print("Espacio abierto")
+	spaceOpen = True
 	if nomiEnabled == "true":
 		return_code = subprocess.call(commandOpen,shell=True)
 	updateSpaceApi()
 
 def closeSpace():
 	global nomiEnabled
+	global spaceOpen
 	print("Espacio cerrado")
+	spaceOpen = False
 	if nomiEnabled == "true" :
 		return_code = subprocess.call(commandClose,shell=True)
 	updateSpaceApi()
