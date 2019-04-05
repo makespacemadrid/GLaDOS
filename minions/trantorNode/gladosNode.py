@@ -5,6 +5,7 @@ import platform
 import psutil
 import subprocess
 import urllib
+from privateCommands import *
 from threading import Timer
 from generateSpaceApiJson import generateSpaceApi
 
@@ -14,16 +15,9 @@ mqttPort   = 1883
 nodeName   = "trantor"
 
 globalShutdown = False
-
 updateNomi     = "true"
 updateSpaceApi = "true"
-
-commandOpen             = "wget -O /dev/null http://127.0.0.1:3141/open"
-commandClose            = "wget -O /dev/null http://127.0.0.1:3141/close"
-commandUpdateSpaceApi   = "scp -P18765 status.json  makespac@makespacemadrid.org:www/spaceapi/status.json"
-commandNomiAnnounce     = "wget -O /dev/null http://127.0.0.1:3141/announcement/"
-
-coffe_made   = 666
+coffe_made     = 666
 
 
 def openSpace():
