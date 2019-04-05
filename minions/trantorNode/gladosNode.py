@@ -18,6 +18,8 @@ globalShutdown = False
 updateNomi     = "true"
 updateSpaceApi = "true"
 coffe_made     = 666
+temperature    = 42
+humidity       = 42
 
 
 def openSpace():
@@ -107,6 +109,8 @@ def subscribeTopics():
 	mqttClient.subscribe("space/Nomi/enabled")
 	mqttClient.subscribe("space/spaceApi/enabled") 
 	mqttClient.subscribe("space/coffeMade")
+	mqttClient.subscribe("space/temperature")
+	mqttClient.subscribe("space/humidity")
 def on_connect(client, userdata, rc,arg):
 	print("Connected with result code "+str(rc))
 	mqttClient.publish("node/"+nodeName+"/system/status", "connected")
@@ -116,7 +120,10 @@ def on_connect(client, userdata, rc,arg):
 # The callback for when a PUBLISH message is received from the server.
 def on_message(client, userdata, msg):
 	global updateNomi
-	global updateSpaceApi9
+	global updateSpaceApi
+	global coffe_made
+	global temperature
+	global humidity
 	print("RCV: "+msg.topic + " - " +msg.payload)
 	if (msg.topic == "space/status") :
 		if 	msg.payload == "Open" :
@@ -135,7 +142,10 @@ def on_message(client, userdata, msg):
 		updateSpaceApi = msg.payload
 	elif msg.topic == "space/coffeMade":
 		coffe_made = msg.payload
-
+	elif msg.topic == "space/temperature":
+		temperature = msg.payload
+	elif msg.topic == "space/humidity":
+		humidity = msg.payload
 def on_disconnect(client, userdata, rc):
 	print("Disconnected! rc: "+str(rc))
 
