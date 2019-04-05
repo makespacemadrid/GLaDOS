@@ -112,6 +112,7 @@ def subscribeTopics():
 	mqttClient.subscribe("space/Nomi/announce")
 	mqttClient.subscribe("space/Nomi/enabled")
 	mqttClient.subscribe("space/spaceApi/enabled") 
+	mqttClient.subscribe("space/spaceApi/update") 
 	mqttClient.subscribe("space/coffeeMade")
 	mqttClient.subscribe("space/temperature")
 	mqttClient.subscribe("space/humidity")
@@ -141,6 +142,8 @@ def on_message(client, userdata, msg):
 		announceNomi(msg.payload);
 	elif msg.topic == "space/spaceApi/enabled":
 		spaceApiEnabled = msg.payload
+	elif msg.topic == "space/spaceApi/update":
+		updateSpaceApi()
 	elif msg.topic == "space/coffeMade":
 		coffe_made = msg.payload
 	elif msg.topic == "space/temperature":
