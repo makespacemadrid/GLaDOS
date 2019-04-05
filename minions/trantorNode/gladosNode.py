@@ -15,8 +15,8 @@ mqttPort   = 1883
 nodeName   = "trantor"
 
 globalShutdown  = False
-nomiEnabled     = "true"
-spaceApiEnabled = "true"
+nomiEnabled     = "false"
+spaceApiEnabled = "false"
 coffe_made      = 666
 temperature     = 42
 humidity        = 42
@@ -26,7 +26,7 @@ def updateSpaceApi():
 	global temperature
 	global humidity
 	global coffe_made
-	if updateSpaceApi == "true" :
+	if spaceApiEnabled == "true" :
 		generateSpaceApi(True,temperature,humidity,coffe_made)
 		return_code = subprocess.call(commandUpdateSpaceApi,shell=True)	
 
