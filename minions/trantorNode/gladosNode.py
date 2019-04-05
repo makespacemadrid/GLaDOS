@@ -153,7 +153,6 @@ def on_disconnect(client, userdata, rc):
 
 print("Init...")
 print("[GladosNode] Connecting : "+mqttServer+" Port:"+str(mqttPort))
-print("[GladosNode] Global Shutdown : "+ str(globalShutdown))
 getSystemInfo()
 print("-----------------------------------------------------------")
 
