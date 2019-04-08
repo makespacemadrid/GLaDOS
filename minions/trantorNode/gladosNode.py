@@ -12,7 +12,7 @@ from generateSpaceApiJson import generateSpaceApi
 
 mqttServer = "10.0.0.10"
 mqttPort   = 1883
-nodeName   = "trantor"
+nodeName   = "server"
 
 nomiEnabled     = "false"
 spaceApiEnabled = "false"
