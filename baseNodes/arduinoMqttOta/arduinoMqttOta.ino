@@ -35,9 +35,7 @@ const char* mqtt_server  = "iot.eclipse.org";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-long lastMsg = 0;
-char msg[50];
-int value = 0;
+
 
 void subscribe_topics()
 {//Aqui las subscripciones a los topicos
