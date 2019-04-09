@@ -6,3 +6,6 @@
 	path = baseNodes/libreNode
 	url = https://github.com/successbyfailure/libreNode
 	branch = master
+[submodule "minions/powerMeterEastron/lib/SDM_Energy_Meter"]
+	path = minions/powerMeterEastron/lib/SDM_Energy_Meter
+	url = https://github.com/reaper7/SDM_Energy_Meter

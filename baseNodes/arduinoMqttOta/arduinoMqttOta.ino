@@ -93,6 +93,11 @@ void setup_wifi() {
   Serial.println(WiFi.localIP());
 }
 
+String localIP()
+{
+  return String(WiFi.localIP()[0]) + "." +String(WiFi.localIP()[1]) + "." +String(WiFi.localIP()[2]) + "." +String(WiFi.localIP()[3]);
+}
+
 void setup_ota()
 {
   ArduinoOTA.setHostname(nodeid);
@@ -147,7 +152,7 @@ void reconnect()
     {
       debugln("connected");
       subscribe_topics();
-      String pub = String("Hola Mundo! Soy ") + String(nodeid);
+      String pub = String("Hola Mundo! Soy ") + String(nodeid) + ", mi IP es " + localIP();
       client.publish("node/hello",pub.c_str());
     } else {
       debug("failed, rc=");
