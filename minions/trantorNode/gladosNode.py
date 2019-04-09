@@ -158,9 +158,9 @@ def on_message(client, userdata, msg):
 	elif msg.topic == "space/locked":
 		spaceLocked = msg.payload
 		if (spaceLocked == True) :
-			announceNomi("Cerrojos cerrados!");
+			announceNomi("¡Cerrojos cerrados!");
 		else :
-			announceNomi("Cerrojos cerrados!");
+			announceNomi("¡Cerrojos abiertos!");
 
 def on_disconnect(client, userdata, rc):
 	print("Disconnected! rc: "+str(rc))
