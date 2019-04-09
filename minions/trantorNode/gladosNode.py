@@ -20,6 +20,7 @@ coffe_made      = 666
 temperature     = 42
 humidity        = 42
 spaceOpen       = False
+spaceLocked     = False
 
 def updateSpaceApi():
 	global spaceApiEnabled
@@ -116,6 +117,8 @@ def subscribeTopics():
 	mqttClient.subscribe("space/coffeeMade")
 	mqttClient.subscribe("space/temperature")
 	mqttClient.subscribe("space/humidity")
+	mqttClient.subscribe("space/locked")
+
 def on_connect(client, userdata, rc,arg):
 	print("Connected with result code "+str(rc))
 	mqttClient.publish("node/"+nodeName+"/system/status", "connected")
@@ -129,6 +132,8 @@ def on_message(client, userdata, msg):
 	global coffe_made
 	global temperature
 	global humidity
+	global spaceLocked
+
 	print("RCV: "+msg.topic + " - " +msg.payload)
 	if (msg.topic == "space/status") :
 		if 	msg.payload == "Open" :
@@ -150,6 +155,13 @@ def on_message(client, userdata, msg):
 		temperature = msg.payload
 	elif msg.topic == "space/humidity":
 		humidity = msg.payload
+	elif msg.topic == "space/locked":
+		spaceLocked = msg.payload
+		if (spaceLocked == True)
+			announceNomi("Cerrojos cerrados!");
+		else
+			announceNomi("Cerrojos cerrados!");
+
 def on_disconnect(client, userdata, rc):
 	print("Disconnected! rc: "+str(rc))
 
