@@ -156,7 +156,7 @@ def on_message(client, userdata, msg):
 	elif msg.topic == "space/humidity":
 		humidity = msg.payload
 	elif msg.topic == "space/locked":
-		spaceLocked = msg.payload == "locked"
+		spaceLocked = (msg.payload == "locked")
 		if (spaceLocked == True) :
 			announceNomi("Cerrojos cerrados!");
 		else :
