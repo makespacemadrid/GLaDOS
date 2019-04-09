@@ -157,9 +157,9 @@ def on_message(client, userdata, msg):
 		humidity = msg.payload
 	elif msg.topic == "space/locked":
 		spaceLocked = msg.payload
-		if (spaceLocked == True)
+		if (spaceLocked == True) :
 			announceNomi("Cerrojos cerrados!");
-		else
+		else :
 			announceNomi("Cerrojos cerrados!");
 
 def on_disconnect(client, userdata, rc):
