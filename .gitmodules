@@ -9,3 +9,6 @@
 [submodule "minions/powerMeterEastron/lib/SDM_Energy_Meter"]
 	path = minions/powerMeterEastron/lib/SDM_Energy_Meter
 	url = https://github.com/reaper7/SDM_Energy_Meter
+[submodule "minions/OpenClosed"]
+	path = minions/OpenClosed
+	url = https://github.com/makespacemadrid/OpenClosed
