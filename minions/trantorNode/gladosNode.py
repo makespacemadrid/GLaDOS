@@ -156,11 +156,13 @@ def on_message(client, userdata, msg):
 	elif msg.topic == "space/humidity":
 		humidity = msg.payload
 	elif msg.topic == "space/locked":
-		spaceLocked = (msg.payload == "locked")
-		if (spaceLocked == True) :
-			announceNomi("Cerrojos cerrados!");
-		else :
-			announceNomi("Cerrojos abiertos!");
+		newStatus = (msg.payload == "locked")
+		if (newStatus != spaceLocked) :
+			spaceLocked = newStatus;
+			if (spaceLocked == True) :
+				announceNomi("Cerrojos cerrados!")
+			else :
+				announceNomi("Cerrojos abiertos!")
 
 def on_disconnect(client, userdata, rc):
 	print("Disconnected! rc: "+str(rc))
