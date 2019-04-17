@@ -14,6 +14,9 @@ El OTA no funciona hasta que no se reinicia el microcontrolador despues de la pr
 #define OTA_ENABLE    // Comentar para deshabilitar ota
 //#define OTA_PASSWORD  // Comentar para deshabilitar la contraseña ota, la contraseña en si se configura mas abajo en ota_password
 
+//#define MQTT_MAX_PACKET_SIZE 1024 
+//Ojo, que por defecto la librria viene a 128 bytes! Si necesitas mas hay que modificar ese parametro en el pubsubclient.h
+//fucking arduino que se pasa las directivas del preprocesador por los ___.....
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
