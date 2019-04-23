@@ -4,14 +4,16 @@ import os
 import platform
 import psutil
 from threading import Timer
+import platform
 
 
 
 #Variables
 
-mqttServer = "localhost"
+mqttServer = "10.0.0.10"
 mqttPort   = 1883
-nodeName   = "pyNode"
+
+nodeName   = platform.node()
 globalShutdown = False
 
 
@@ -20,7 +22,7 @@ globalShutdown = False
 def getSystemInfo():
 	procType = str(platform.machine())
 	osType   = str(platform.system())
-	print("Architecture : "+procType+" OS: "+osType)
+	print("Hostname :" + nodeName +", Architecture : "+procType+" OS: "+osType)
 
 def publishSystemInfo():
 	mqttClient.publish("node/"+nodeName+"/system/cpu", platform.machine())
@@ -42,18 +44,23 @@ def publishSystemStats():
 
 
 def powerOffSystem():
-	mqttClient.publish("node/"+nodeName+"/system/status", "poweroff")
+	mqttClient.publish("node/"+nodeName+"/status", "poweroff")
 	print("Shutting down (M$ style)!")
 	os.system('shutdown -s') # Windows, intenta las dos maneras de apagar... y que funcione la que corresponda.
 	print("Shutting down (Linux style)!")
 	os.system('systemctl poweroff -i') #Linux
 
+def debug(msg) :
+	mqttClient.publish("node/"+nodeName+"/debug",msg)
 
 
 def on_connect(client, userdata, rc,arg):
 	print("Connected with result code "+str(rc))
 	mqttClient.subscribe("space/powerStatus")
-	mqttClient.publish("node/"+nodeName+"/system/status", "connected")
+	mqttClient.subscribe("node/"+nodeName+"/cmnd")
+	procType = str(platform.machine())
+	osType   = str(platform.system())
+	mqttClient.publish("node/hello", "Hello! Im "+ nodeName +", Architecture : "+procType+" OS: "+osType)
 	publishSystemInfo()
 
 # The callback for when a PUBLISH message is received from the server.
@@ -63,7 +70,9 @@ def on_message(client, userdata, msg):
 	if (msg.topic == "space/powerStatus") and globalShutdown :
 		if msg.payload == "off" :
 			powerOffSystem()
-
+	elif (msg.topic == "node/"+nodeName+"/cmnd") :
+		if msg.payload == "poweroff":
+			powerOffSystem()
 
 def on_disconnect(client, userdata, rc):
 	print("Disconnected! rc: "+str(rc))
@@ -80,18 +89,18 @@ print("-----------------------------------------------------------")
 
 
 #Icono para el tray del sistema
-import pystray
-icon = pystray.Icon('test name')
-from PIL import Image, ImageDraw
-width = 64
-height = 64
-image = Image.new('RGB', (width, height),(125,125,0))
-dc = ImageDraw.Draw(image)
-dc.rectangle((width // 2, 0, width, height // 2),(125,0,0))
-dc.rectangle((0, height // 2, width // 2, height),(125,0,0))
-icon.image = image
-icon.icon = image
-icon.visible = True
+#import pystray
+#icon = pystray.Icon('test name')
+#from PIL import Image, ImageDraw
+#width = 64
+#height = 64
+#image = Image.new('RGB', (width, height),(125,125,0))
+#dc = ImageDraw.Draw(image)
+#dc.rectangle((width // 2, 0, width, height // 2),(125,0,0))
+#dc.rectangle((0, height // 2, width // 2, height),(125,0,0))
+#icon.image = image
+#icon.icon = image
+#icon.visible = True
 
 #conexion mqtt
 mqttClient = mqtt.Client()
