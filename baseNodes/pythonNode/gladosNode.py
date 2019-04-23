@@ -1,3 +1,5 @@
+# pip install paho-mqtt psutil
+
 import paho.mqtt.client as mqtt
 import time
 import os
@@ -45,10 +47,12 @@ def publishSystemStats():
 
 def powerOffSystem():
 	mqttClient.publish("node/"+nodeName+"/status", "poweroff")
-	print("Shutting down (M$ style)!")
-	os.system('shutdown -s') # Windows, intenta las dos maneras de apagar... y que funcione la que corresponda.
-	print("Shutting down (Linux style)!")
-	os.system('systemctl poweroff -i') #Linux
+	if(platform.system() == "Linux"):
+		print("Shutting down (Linux style)!")
+		os.system('sudo systemctl poweroff -i') #Linux
+	else
+		print("Shutting down (M$ style)!")
+		os.system('shutdown -s') # Windows, intenta las dos maneras de apagar... y que funcione la que corresponda.
 
 def debug(msg) :
 	mqttClient.publish("node/"+nodeName+"/debug",msg)
