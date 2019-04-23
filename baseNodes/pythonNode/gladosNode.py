@@ -50,7 +50,7 @@ def powerOffSystem():
 	if(platform.system() == "Linux"):
 		print("Shutting down (Linux style)!")
 		os.system('sudo systemctl poweroff -i') #Linux
-	else
+	else :
 		print("Shutting down (M$ style)!")
 		os.system('shutdown -s') # Windows, intenta las dos maneras de apagar... y que funcione la que corresponda.
 
@@ -122,7 +122,7 @@ except:
 	print("Cant connect, will retry automatically")
 
 #loop del programa
-while True : 
+while True :
 	time.sleep(10)
 	publishSystemStats()
 #	icon.run()
