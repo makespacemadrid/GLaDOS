@@ -6,7 +6,7 @@ Type=simple
 Restart=always
 RestartSec=1
 User=centos
-ExecStart=/usr/bin/python /home/glados/glados/baseNodes/pythonNode/gladosNode.py
+ExecStart=/usr/bin/python /home/glados/glados/baseNodes/minions/computerNode/node.py
 
 [Install]
 WantedBy=multi-user.target

@@ -34,13 +34,13 @@ El OTA no funciona hasta que no se reinicia el microcontrolador despues de la pr
 
 const char* nodeid       = "powerMeter";
 const char* ota_password =  "666666";
-const char* mqtt_server  = "10.0.0.10";
+const char* mqtt_server  = "10.0.1.254";
 //--------------------------------------------------
 //--------------------------------------------------
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-SoftwareSerial swSerSDM(D6, D5);                                                //config SoftwareSerial (rx->pin13 / tx->pin15) (if used)
+SoftwareSerial swSerSDM(D5, D6);                                                //config SoftwareSerial (rx->pin13 / tx->pin15) (if used)
 SDM sdm(swSerSDM, 9600, NOT_A_PIN);                                             //SOFTWARE SERIAL
 //SDM sdm(Serial, 9600, NOT_A_PIN, SERIAL_8N1, false);                            //HARDWARE SERIAL
 WiFiUDP       _ntpUdp;

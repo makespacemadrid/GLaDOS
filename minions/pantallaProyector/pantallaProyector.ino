@@ -38,10 +38,7 @@ const int    pinBajar = D2 ;
 
 bool subiendo         = false;
 bool bajando          = false;
-bool aperturaCompleta = true;
 
-uint32 timeout   = tiempoPersiana;
-uint32 progress  = 0;
 uint32 startTime = millis();
 
 const char* nodeid       = "pantallaProyector";
@@ -85,42 +82,17 @@ void callback(char* topic, byte* payload, unsigned int length) {
   
   if( t == topicCommand) 
   {
-    if( (msg == "up") || (msg = "0") )
+    if( (msg == "up") || (msg == "0") )
     {
-      aperturaCompleta = true;
-      timeout = tiempoPersiana;
       SUBIR();
     }
-    else if((msg == "down") || (msg = "100"))
+    else if((msg == "down") || (msg == "100"))
     {
-      aperturaCompleta = true;
-      timeout = tiempoPersiana;
       BAJAR();
     }
     else if(msg == "stop")
     {
-      timeout = tiempoPersiana;
       PARAR();
-    }
-    else
-    {//Codigo experimental para aceptar aperturas parciales
-      aperturaCompleta = false;
-      for(int i = 0 ; i < msg.length() ; i++)  if(!isdigit(msg.charAt(i))) return; //Comprobamos si el mensaje contiene un número, y si no lo tiene paramos.
-      int percent = msg.toInt();
-      if((percent > 100) && (percent < 0  )) return;
-      uint32 destino = percent*tiempoPersiana;
-      if(destino > progress)
-      {
-        timeout = destino - progress;
-        BAJAR();
-      }
-      else if(progress > destino)
-      {
-        timeout = progress -destino;
-        SUBIR();
-      }
-      progress = destino;
-      client.publish(topicStatusNumeric.c_str(),String(percent).c_str());
     }
   }
 
@@ -304,7 +276,6 @@ void BAJAR() {
   debugln("Bajar");
   bajando = true;
   startTime = millis();
-
   client.publish(topicStatus.c_str(),"goingdown");
   digitalWrite(pinBajar, LOW);
 }
@@ -317,16 +288,16 @@ void loop() {
     uint32 tiempo = millis() - startTime;
     if(subiendo)
     {
-      if(aperturaCompleta) client.publish(topicStatusNumeric.c_str(),String((timeout-tiempo)*100.0/timeout).c_str());
-      if(tiempo > timeout)
+      int percent = tiempo * 100 / tiempoPersiana;
+      if(percent%5 == 0) client.publish(topicStatusNumeric.c_str(),String(percent).c_str());
+      if(tiempo > tiempoPersiana)
       {
         PARAR();
         client.publish(topicStatus.c_str(),"up");
       }
     } else if(bajando)
     {
-      if(aperturaCompleta) client.publish(topicStatusNumeric.c_str(),String(tiempo*100.0/timeout).c_str());
-      if(tiempo > timeout)
+      if(tiempo > tiempoPersiana)
       {
         PARAR();
         client.publish(topicStatus.c_str(),"down");
