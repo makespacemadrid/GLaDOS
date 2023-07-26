@@ -1,7 +1,7 @@
 #ifndef STORAGESS
 #define STORAGESS
 
-#include "aux.h"
+#include "extra.h"
 #include "strings.h"
 
 //

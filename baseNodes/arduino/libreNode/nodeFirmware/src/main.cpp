@@ -43,7 +43,7 @@
 #include <LXWiFiSACN.h>
 #include <PubSubClient.h>
 //
-#include "aux.h"
+#include "extra.h"
 #include "strings.h"
 #include "baseNode.h"
 #include "nLedBar.h"
