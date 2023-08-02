@@ -4,7 +4,7 @@ openai.api_base = "https://apicuna.mapache.xyz/v1"
 
 
 model_list = openai.Model.list()
-print(model_list["data"][0]["id"])
+#print(model_list["data"][0]["id"])
 
 #model = "text-davinci-003"
 model = "weights"
