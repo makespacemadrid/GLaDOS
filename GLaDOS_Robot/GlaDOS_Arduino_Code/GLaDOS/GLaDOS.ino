@@ -106,9 +106,9 @@ void loop()
 {
   //all_move();
   //scene1();
-  serial();
+  //serial();
   //bodym();
-  //up();
+  up();
 }
 
 
