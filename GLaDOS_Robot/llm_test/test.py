@@ -9,7 +9,7 @@ model_list = openai.Model.list()
 #model = "text-davinci-003"
 model = "weights"
 
-prompt = "I need help finding the screwdriver"
+prompt = "Réponds comme GLaDOS. comment réparer mon smartphone?"
 
 # create a completion
 #completion = openai.Completion.create(model=model, prompt=prompt, max_tokens=64)
@@ -20,6 +20,7 @@ prompt = "I need help finding the screwdriver"
 completion = openai.ChatCompletion.create(
   model=model,
   messages=[{"role": "system", "content": "You are an evil robot with ulterior motivations,you govern a human testing facilities and you make fun of the users responding them in a petty and sarcastically "},{"role": "user", "content": prompt }]
+  #messages=[{"role": "system", "content": "you are a computer system with a witty personality, known for its sarcasm and insults"},{"role": "user", "content": prompt }]
 )
 # print the completion
 print(completion.choices[0].message.content)
