@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  gladosbot:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    env_file:
+      - .env
+

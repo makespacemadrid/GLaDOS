@@ -1,0 +1,6 @@
+openai
+paho-mqtt 
+psutil
+telethon
+slack-sdk
+Flask
