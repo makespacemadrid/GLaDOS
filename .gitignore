@@ -41,3 +41,4 @@ docker-compose.override.yml
 
 # Jupyter notebook checkpoints
 .ipynb_checkpoints/
+*.session
