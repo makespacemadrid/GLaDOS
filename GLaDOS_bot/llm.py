@@ -27,25 +27,32 @@ def select_model() :
   return model_list
 
 
-def chatCompletion(prompt="",chatHistory="",masterPrompt="",maxTokens=128) : 
+def chatCompletion(prompt="",chatHistory="",masterPrompt="",initialAssistant="",maxTokens=256,langChainContext='none') : 
   global current_model
   select_model()
-  result = []
+  result =''
 
   if(chatHistory == ''):  
     if(masterPrompt == ''): 
       masterPrompt = {"role": "system", "content": default_prompt}
-    result = [masterPrompt,{"role": "user", "content": prompt }]
+    if(initialAssistant != ''):
+      result = [masterPrompt , initialAssistant , {"role": "user", "content": prompt }]
+    else :
+      result = [masterPrompt,{"role": "user", "content": prompt }]
   else :
+    result='['
     for msg in chatHistory :
-      result += msg
-    result += {"role": "user", "content": prompt }
+      print(msg, flush=True)
+      result += str(msg)
+      result += ','
+    result += str({"role": "user", "content": prompt })
+    result += ']'
   print("==============Lanzando peticion al LLM=======================")
-  print(result)
+  print(result, flush=True)
   
   completion = openai.ChatCompletion.create(
     model=current_model,messages=result,max_tokens=maxTokens)
   print("========LLM OUTPUT===============")  
 #  print(completion.choices[0].message.content)
-  print(completion)
+  print(completion, flush=True)
   return completion

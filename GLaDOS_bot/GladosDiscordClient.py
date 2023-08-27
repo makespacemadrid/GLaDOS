@@ -3,37 +3,55 @@ import os
 import discord
 from discord.ext import commands
 
-def run_bot(askGLaDOS) :
-  #print("connecting discord")
-  discord_token = os.environ.get("DISCORD_TOKEN")
-  discordbot_prefix = "!"
-  discordintents = discord.Intents.default()
-  discordintents.messages = True
-  discordintents.members = True
-  discordbot = commands.Bot(command_prefix=discordbot_prefix,intents=discordintents)
+class GladosDiscordClient:
+    def __init__(self):
+        self.discord_token = os.environ.get("DISCORD_TOKEN")
+        self.discordbot_prefix = "!"
+        
+        self.discordintents = discord.Intents.default()
+        self.discordintents.messages = True
+        self.discordintents.members = True
+        self.discordintents.message_content = True
 
-  @discordbot.event
-  async def on_ready():
-    print(f'Bot conectado como {discordbot.user.name} - {discordbot.user.id}')
+        self.bot = commands.Bot(command_prefix=self.discordbot_prefix, intents=self.discordintents)
+        self._setup_bot()
+        self.msgBuffer = []
+    def _setup_bot(self):
+        @self.bot.event
+        async def on_ready():
+            print(f'Bot conectado como {self.bot.user.name} - {self.bot.user.id}')
 
-  @discordbot.command(name='hola')
-  async def hello(ctx):
-    await ctx.send(f"Hola, {ctx.message.author.name}!")
+        @self.bot.command(name='hola')
+        async def hello(ctx):
+            await ctx.send(f"Hola, {ctx.message.author.name}!")
 
-  @discordbot.event
-  async def on_message(message):
-    if message.author == discordbot.user:
-        return
-    # Reaccionar a menciones
-    if discordbot.user in message.mentions:
-        await message.channel.send(askGLaDOS(message.content))
+        @self.bot.event
+        async def on_message(message):
+            if message.author == self.bot.user:
+                return
 
-    # Reaccionar a DMs
-    if isinstance(message.channel, discord.DMChannel):
-        await message.channel.send(askGLaDOS(message.content))
+            # Reaccionar a menciones
+            if self.bot.user in message.mentions:
+                self.msgBuffer.append(message.content)
 
-    # Nota: Si tienes comandos, necesitas procesarlos también.
-    await discordbot.process_commands(message)
+            # Reaccionar a DMs
+            if isinstance(message.channel, discord.DMChannel):
+                self.msgBuffer.append(message.content)
 
-  print("Connecting Discord...")
-  discordbot.run(discord_token)
+            # Nota: Si tienes comandos, necesitas procesarlos también.
+            await self.bot.process_commands(message)
+
+    def run(self):
+        print("Connecting Discord...")
+        self.bot.run(self.discord_token)
+
+    async def sendMsg(self,msg, channel = "general"):
+      print("Looking discord channel: "+channel)
+      print(self.bot.guilds[0].text_channels)
+      ch = discord.utils.get(self.bot.guilds[0].text_channels, name=channel)
+      await ch.send(msg)
+ 
+    def getMsgs(self) : 
+      result = self.msgBuffer
+      self.msgBuffer = []
+      return result
