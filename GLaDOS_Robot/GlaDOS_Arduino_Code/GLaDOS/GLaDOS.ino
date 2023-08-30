@@ -5,7 +5,7 @@
 #define DEF1 100
 #define S2min 30
 #define S2max 130
-#define DEF2 80
+#define DEF2 90
 #define S3min 90
 #define S3max 160
 #define DEF3 120
@@ -52,7 +52,25 @@ class Robot_Part
       {
         pos=max_pos;
       }
-      servo.write(pos);
+
+
+      if (servo.read() < pos)
+      {
+        while (servo.read() < pos)
+        {
+          servo.write(servo.read() + 5);
+          delay(50);
+        }
+      }
+      else if (pos < servo.read())
+      {
+        while (servo.read() > pos)
+        {
+          servo.write(servo.read() - 5);
+          delay(50);
+        }
+      }
+
     }
 
     void set()
@@ -98,6 +116,7 @@ void setup() {
   neck.set();
   head.set();
   base.set();
+  Serial.println("init");
 }
 
 
@@ -106,12 +125,10 @@ void loop()
 {
   //all_move();
   //scene1();
-  //serial();
+  serial();
   //bodym();
-  up();
+  //up();
 }
-
-
 
 
 
@@ -240,7 +257,7 @@ void serial()
         delay(15);
         //str="servo1:"+String(pos);
         //Serial.println(str);
-        Serial.println("Body");
+        //Serial.println("Body");
     }
     else if(str_servo=="servo2")
     {
@@ -248,7 +265,7 @@ void serial()
         delay(15);
         //str="servo2:"+String(pos);
         //Serial.println(str);
-        Serial.println("Neck");
+        //Serial.println("Neck");
     }
     else if(str_servo=="servo3")
     {
@@ -256,7 +273,7 @@ void serial()
         delay(15);
         //str="servo3:"+String(pos);
         //Serial.println(str);
-        Serial.println("Head");
+        //Serial.println("Head");
     }
     else if(str_servo=="servo4")
     {
@@ -264,7 +281,25 @@ void serial()
         delay(15);
         //str="servo3:"+String(pos);
         //Serial.println(str);
-        Serial.println("Base");
+        //Serial.println("Base");
+    }
+    else if(str_servo=="servox")
+    {
+        base.move(p);
+        delay(15);
+        //str="servo3:"+String(pos);
+        //Serial.println(str);
+        //Serial.println("Base");
+    }
+    else if(str_servo=="servoa")
+    {
+        base.move((base.servo).read()+20);
+        base.move((base.servo).read()-40);
+        base.move((base.servo).read()+20);
+        delay(15);
+        //str="servo3:"+String(pos);
+        //Serial.println(str);
+        //Serial.println("Base");
     }
   }
   delay(500); 
