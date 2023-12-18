@@ -5,3 +5,4 @@ telethon
 slack-sdk
 Flask
 discord.py
+autopep8
