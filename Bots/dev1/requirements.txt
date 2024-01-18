@@ -1,0 +1,8 @@
+openai
+paho-mqtt 
+psutil
+telethon
+slack-sdk
+Flask
+discord.py
+autopep8
