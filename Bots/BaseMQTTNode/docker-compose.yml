@@ -1,0 +1,11 @@
+version: '3'
+services:
+  glados_node:
+    build: .
+    image: makespacemadrid/gladosnode:latest
+#    ports:
+#      - "8080:8080" # Cambia el puerto si es necesario
+    environment:
+      - MQTT_PORT=1883 
+      - MQTT_HOST=10.0.10.10
+      - NODE_NAME=test-node
