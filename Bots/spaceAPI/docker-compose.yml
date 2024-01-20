@@ -1,0 +1,18 @@
+version: '3'
+services:
+  mqtt-spaceapi:
+    build: .
+    image: makespacemadrid/glados-mqtt-spaceapi:latest
+    volumes:
+      - ./spaceapi:/spaceapi
+    environment:
+      - MQTT_PORT = 1883
+      - MQTT_HOST = glados.makespacemadrid.org
+
+  nginx-spaceapi:
+    image: nginx:latest
+    ports:
+      - 8800:80
+    volumes:
+      - ./spaceapi:/usr/share/nginx/html
+    restart: always

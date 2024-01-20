@@ -49,9 +49,14 @@ def on_connect(client, userdata, rc,arg):
 
 
 # The callback for when a PUBLISH message is received from the server.
+# Aqui recibimos los mensajes, y si no hay que hacer nada con ellos se lo pasamos al callback del nodo para que los procese 
 def on_message(client, userdata, msg):
-	debug("[GladosNode] mqtt_rcv: {  "+msg.topic + " - " +msg.payload+ "  }")
-	
+
+	try:
+		debug("[GladosNode] mqtt_rcv: {  "+msg.topic + " - " +msg.payload+ "  }")
+	except:	
+		debug("[GladosNode] mqtt_rcv: not str ")
+
 #	if (msg.topic == globalCommandTopic) :
 #		if not processGlobalCMD(msg.payload) :
 #			nodeMsgCallback(client, userdata, msg)
@@ -99,5 +104,5 @@ def initMQTT(host,port,name,connectedCallback,msgCallback,disconnectedCallback) 
 	except:
 		print("Cant connect, will retry automatically")
 	
-#	mqttClient.loop_start()
-	mqttClient.loop_forever()
+	mqttClient.loop_start()
+#	mqttClient.loop_forever()
