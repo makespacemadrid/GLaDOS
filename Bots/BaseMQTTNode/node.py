@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
 
+#Nodo Mqtt de ejemplo, 
+#gladosMQTT.py contiene la funcionalidad para manejar el mqtt.
+# aui nos conectamos y reaccionamos a los mensajes que llegan.
+# TODO Documentar mejor...  gpt? xD
+
 import os
 import gladosMQTT
 import platform
@@ -7,9 +12,9 @@ import time
 
 
 #Variables
-mqHost	 = os.environ.get("MQTT_HOST", "10.0.10.10")
+mqHost	 = os.environ.get("MQTT_HOST", "mqtt.makespacemadrid.org")
 mqPort 	 = os.environ.get("MQTT_PORT", 1883)
-nodeName = os.environ.get("NODE_NAME", platform.node())
+nodeName = platform.node()
 
 
 def subscribeTopics() :
@@ -25,9 +30,7 @@ def on_message(client, userdata, msg):
 def on_disconnect(client, userdata, rc):
 	gladosMQTT.debug("Disconnected! rc: "+str(rc))
 
-print("start!")
-
-
+gladosMQTT.initMQTT(mqHost,mqPort,nodeName,on_connect,on_message,on_disconnect)
 
 try:
 	while True:
