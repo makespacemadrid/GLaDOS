@@ -8,6 +8,7 @@ services:
     environment:
       - MQTT_PORT = 1883
       - MQTT_HOST = glados.makespacemadrid.org
+    restart: always
 
   nginx-spaceapi:
     image: nginx:latest
