@@ -26,17 +26,19 @@ def on_connect(client, userdata, rc,arg):
 
 def on_message(client, userdata, msg):
 	if (msg.topic == "space/status") :
-		# Extraer la carga útil y decodificarla a una cadena de texto
-		payload = msg.payload.decode('utf-8')
-		# Guardar el payload en un archivo
-		with open('/spaceapi/status.json', 'w') as file:
-			file.write(payload)
-		print("Recibido:", payload)  # Imprimir el payload para depuración
-		# Intentar parsear el JSON
 		try:
+			# Extraer la carga útil y decodificarla a una cadena de texto
+			payload = msg.payload.decode('utf-8')
 			data = json.loads(payload)
 			open_status = data['state']['open']
-			gladosMQTT.debug("open: "+open_status)
+			if open_status:
+				gladosMQTT.debug("open!")
+			else:
+				gladosMQTT.debug("closed!")
+			with open('/spaceapi/status.json', 'w') as file:
+				file.write(payload)
+			print("Recibido:", payload)  # Imprimir el payload para depuración
+			
 		except json.JSONDecodeError as e:
 			print("Error al parsear JSON:", e)
 
