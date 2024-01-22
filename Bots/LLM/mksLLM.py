@@ -1,10 +1,10 @@
 import openai
-import gladosMQTT
+import os
 
-openai_api_key = "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"
-openai_api_base = "https://apicuna.mapache.xyz/v1"
-custom_api_key = "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"
-custom_api_base = "https://apicuna.mapache.xyz/v1"
+openai_api_key = os.environ.get('OPENAI_API_TOKEN')
+openai_api_base = os.environ.get('OPENAI_API_ENDPOINT')
+custom_api_key = os.environ.get('MKSLLM_API_TOKEN')
+custom_api_base = os.environ.get('MKSLLM_API_ENDPOINT')
 
 
 openai.api_key = custom_api_key
@@ -24,8 +24,9 @@ def select_model():
     model_list = openai.Model.list()
     global current_model
     current_model = model_list["data"][0]["id"]
-#  print(model_list["data"])
-    gladosMQTT.debug(f"Selected model: {current_model}")
+    print(model_list["data"])
+    print("Selected model:")
+    print(current_model)
     return model_list
 
 
@@ -51,11 +52,12 @@ def chatCompletion(prompt="", chatHistory="", masterPrompt="", initialAssistant=
             result += ','
         result += str({"role": "user", "content": prompt})
         result += ']'
-    gladosMQTT.debug("==============Lanzando peticion al LLM=======================")
-    gladosMQTT.debug(result)
+    print("==============Lanzando peticion al LLM=======================")
+    print(result, flush=True)
 
     completion = openai.ChatCompletion.create(
         model=current_model, messages=result, max_tokens=maxTokens)
-    gladosMQTT.debug("========LLM OUTPUT===============")
-    gladosMQTT.debug(completion)
+    print("========LLM OUTPUT===============")
+#    print(completion.choices[0].message.content)
+    print(completion, flush=True)
     return completion
