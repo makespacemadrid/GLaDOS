@@ -8,7 +8,8 @@
 import os
 
 import gladosMQTT
-import mksLLM
+#import Bots.LLM.llm as llm
+import GladosIA
 import platform
 import time
 import json
@@ -21,6 +22,11 @@ import json
 mqHost	 = "mqtt.makespacemadrid.org" #WTF! No entiendo que pasa con las variables de entorno que vienen del compose :S
 mqPort 	 = 1883
 nodeName = platform.node()
+
+
+gladosBot = GladosIA.GladosBot()
+
+
 
 if not mqHost or not mqPort:
 	print("No mqtt config!")
@@ -64,24 +70,39 @@ def on_message(client, userdata, msg):
 
 def processSlackEvent(event):
 	gladosMQTT.debug(event)
-#	try:
-	data = json.loads(event)
-	if data['type'] == "message":
-		gladosMQTT.debug("message")
-		#Mensaje  a canal 
-		if data['channel_type'] == "channel":
-			respondTo = data['channel']
-			msg = data['text']
-		#Mensaje privado
-		elif data['channel_type'] == "im":
-			respondTo = data['user']
-			msg = data['text']
-#				response = llm.chatCompletion(msg, masterPrompt=self.GLaDOS_Prompt, initialAssistant=self.Initial_Assistant).choices[0].message.content
-			response = mksLLM.chatCompletion(msg).choices[0].message.content
-			gladosMQTT.debug(response)
-			sendToSlack(respondTo,response)
-#	except:
-#		gladosMQTT.debug("processSlackEvent:Error gestionando evento")
+	try:
+		data = json.loads(event)
+		if data['type'] != "message" or 'bot_id' in data:
+			return False
+	except:
+		gladosMQTT.debug("processSlackEvent:Error procesado json")
+
+	try:
+			# Mensajes de union a canal
+			if 'subtype' in data and data['subtype']=="channel_join":
+				respondTo = data['channel']
+				msg = data['text']
+				response = gladosBot.ask(msg)
+				gladosMQTT.debug(response)
+				sendToSlack(respondTo,response)					
+			#Mensaje  a canal 
+			elif data['channel_type'] == "channel":
+				respondTo = data['channel']
+				msg = data['text']
+				if '<@U05LXTJ7Q66>' in msg or 'glados' in msg.lower():
+					response = gladosBot.ask(msg)
+					gladosMQTT.debug(response)
+					sendToSlack(respondTo,response)	
+			#Mensaje privado
+			elif data['channel_type'] == "im":
+				respondTo = data['user']
+				msg = data['text']
+				response = gladosBot.ask(msg)
+				gladosMQTT.debug(response)
+				sendToSlack(respondTo,response)
+	except:
+		gladosMQTT.debug("processSlackEvent:Error gestionando evento")
+		sendToSlack(respondTo,"ERROR: Computer says nooooooo")
 
 def sendToSlack(id,msg):
 	response = json.dumps({"dest": id, "msg": msg})
