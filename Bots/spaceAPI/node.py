@@ -46,12 +46,4 @@ def on_message(client, userdata, msg):
 def on_disconnect(client, userdata, rc):
 	gladosMQTT.debug("Disconnected! rc: "+str(rc))
 
-gladosMQTT.initMQTT(mqHost,mqPort,nodeName,on_connect,on_message,on_disconnect)
-
-try:
-	while True:
-		#Loop principal del programa
-		time.sleep(10)
-		print("ping!")
-except KeyboardInterrupt:
-	print('interrupted!')
+gladosMQTT.initMQTTandLoopForever(mqHost,mqPort,nodeName,on_connect,on_message,on_disconnect)

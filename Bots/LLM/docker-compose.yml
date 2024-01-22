@@ -1,0 +1,16 @@
+version: '3'
+services:
+  mqtt-llm:
+    build: .
+    image: makespacemadrid/glados-mqtt-llm:latest
+    hostname: mqtt-llm
+    env_file:
+      - .env
+    environment:
+      - MQTT_PORT=1883
+      - MQTT_HOST=glados.makespacemadrid.org
+      - MKSLLM_API_TOKEN = ${MKSLLM_API_TOKEN}
+      - MKSLLM_API_ENDPOINT = ${MKSLLM_API_ENDPOINT}
+      - OPENAI_API_TOKEN = ${OPENAI_API_TOKEN}
+      - OPENAI_API_ENDPOINT = ${OPENAI_API_ENDPOINT}
+    restart: always

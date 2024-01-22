@@ -3,6 +3,7 @@ services:
   mqtt-spaceapi:
     build: .
     image: makespacemadrid/glados-mqtt-spaceapi:latest
+    hostname: mqtt-spaceapi
     volumes:
       - ./spaceapi:/spaceapi
     environment:

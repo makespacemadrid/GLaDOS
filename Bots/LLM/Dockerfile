@@ -10,6 +10,8 @@ COPY requirements.txt .
 
 # Copia el archivo node.py al contenedor
 COPY node.py .
+COPY llm.py .
+COPY GladosIA.py .
 
 # Instala las dependencias
 RUN pip install -r requirements.txt

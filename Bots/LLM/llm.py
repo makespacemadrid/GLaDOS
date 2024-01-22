@@ -1,36 +1,34 @@
 import openai
-import gladosMQTT
+from openai import OpenAI
+import os
 
-openai_api_key = "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"
-openai_api_base = "https://apicuna.mapache.xyz/v1"
-custom_api_key = "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"
-custom_api_base = "https://apicuna.mapache.xyz/v1"
+openai_api_key = os.environ.get('OPENAI_API_TOKEN')
+openai_api_url = os.environ.get('OPENAI_API_ENDPOINT')
+custom_api_key = os.environ.get('MKSLLM_API_TOKEN')
+custom_api_url = os.environ.get('MKSLLM_API_ENDPOINT')
 
 
-openai.api_key = custom_api_key
-openai.api_base = custom_api_base
+llm_openai = OpenAI(api_key=openai_api_key,base_url=openai_api_url)
+llm_mks    = OpenAI(api_key=custom_api_key,base_url=custom_api_url)
+
+
 
 current_model = "none"
 default_prompt = "Eres un asistente que ayuda a los usuarios dando respuestas concisas y breves"
 
 
-def set_llm_api(url, key):
-    openai.api_key = key
-    openai.api_base = url
-    select_model()
-
 
 def select_model():
-    model_list = openai.Model.list()
+    model_list = llm_mks.models.list()
     global current_model
-    current_model = model_list["data"][0]["id"]
-#  print(model_list["data"])
-    gladosMQTT.debug(f"Selected model: {current_model}")
+    current_model = model_list.data[0].id
+    print(model_list.data)
+    print("Selected model:")
+    print(current_model)
     return model_list
 
 
 def chatCompletion(prompt="", chatHistory="", masterPrompt="", initialAssistant="", maxTokens=256, langChainContext='none'):
-    # TODO: Identify and remove globals.
     global current_model
     select_model()
     result = ''
@@ -51,11 +49,11 @@ def chatCompletion(prompt="", chatHistory="", masterPrompt="", initialAssistant=
             result += ','
         result += str({"role": "user", "content": prompt})
         result += ']'
-    gladosMQTT.debug("==============Lanzando peticion al LLM=======================")
-    gladosMQTT.debug(result)
+    print("==============Lanzando peticion al LLM=======================")
+    print(result, flush=True)
 
-    completion = openai.ChatCompletion.create(
-        model=current_model, messages=result, max_tokens=maxTokens)
-    gladosMQTT.debug("========LLM OUTPUT===============")
-    gladosMQTT.debug(completion)
+    completion = llm_mks.chat.completions.create(model=current_model, messages=result, max_tokens=maxTokens)
+    print("========LLM OUTPUT===============")
+#    print(completion.choices[0].message.content)
+    print(completion, flush=True)
     return completion

@@ -1,4 +1,4 @@
-# Utiliza una imagen base de Python
+# Utiliza una imagen base que ya tiene el cliente mqtt
 FROM makespacemadrid/glados-base-node:1.0
 
 # Establece el directorio de trabajo en /app
