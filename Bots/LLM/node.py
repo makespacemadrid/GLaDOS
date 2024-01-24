@@ -69,45 +69,45 @@ def on_message(client, userdata, msg):
 
 
 def processSlackEvent(event):
+	gladosMQTT.debug("--->SLACK event ------------------")
 	gladosMQTT.debug(event)
+	gladosMQTT.debug("/SLACK event ------------------")
 	try:
 		data = json.loads(event)
 		if data['type'] != "message" or 'bot_id' in data:
 			return False
 	except:
 		gladosMQTT.debug("processSlackEvent:Error procesado json")
+		return False
 
-	try:
+#	try:
 			# Mensajes de union a canal
-			if 'subtype' in data and data['subtype']=="channel_join":
-				respondTo = data['channel']
-				msg = data['text']
-				response = gladosBot.ask(msg)
-				gladosMQTT.debug(response)
-				sendToSlack(respondTo,response)					
-			#Mensaje  a canal 
-			elif data['channel_type'] == "channel":
-				respondTo = data['channel']
-				msg = data['text']
-				if '<@U05LXTJ7Q66>' in msg or 'glados' in msg.lower():
-					response = gladosBot.ask(msg)
-					gladosMQTT.debug(response)
-					sendToSlack(respondTo,response)	
-			#Mensaje privado
-			elif data['channel_type'] == "im":
-				respondTo = data['user']
-				msg = data['text']
-				response = gladosBot.ask(msg)
-				gladosMQTT.debug(response)
-				sendToSlack(respondTo,response)
-	except Exception as e:
-		error_message = f"processSlackEvent: Error gestionando evento - {str(e)}"
-		gladosMQTT.debug(error_message)
-		sendToSlack(respondTo, f"ERROR: algo no ha funcionado :S - {str(e)}")
+	if 'subtype' in data and data['subtype']=="channel_join":
+		respondTo = data['channel']
+		msg = data['text']
+		response = gladosBot.ask(msg)
+		sendToSlack(respondTo,response)					
+	#Mensaje  a canal 
+	elif data['channel_type'] == "channel":
+		respondTo = data['channel']
+		msg = data['text']
+		if '<@U05LXTJ7Q66>' in msg or 'glados' in msg.lower():
+			response = gladosBot.ask(msg)
+			sendToSlack(respondTo,response)	
+	#Mensaje privado
+	elif data['channel_type'] == "im":
+		respondTo = data['user']
+		msg = data['text']
+		response = gladosBot.ask(msg)
+		sendToSlack(respondTo,response)
+#	except Exception as e:
+#		error_message = f"processSlackEvent: Error gestionando evento - {str(e)}"
+#		gladosMQTT.debug(error_message)
+#		sendToSlack(respondTo, f"ERROR: algo no ha funcionado :S - {str(e)}")
 
 def sendToSlack(id,msg):
 	response = json.dumps({"dest": id, "msg": msg})
-	gladosMQTT.debug(f"Respuesta a slack: {response}")
+	gladosMQTT.debug(f"--->Respuesta a slack: {response}")
 	gladosMQTT.publish(topic_glados_send_msg_id,response)
 
 gladosMQTT.initMQTTandLoopForever(mqHost,mqPort,nodeName,on_connect,on_message,on_disconnect)

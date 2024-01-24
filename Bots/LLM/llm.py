@@ -1,4 +1,3 @@
-import openai
 from openai import OpenAI
 import os
 import gladosMQTT
@@ -34,6 +33,7 @@ def select_model():
 def chatCompletion(prompt="", chatHistory=None, masterPrompt="", initialAssistant="", maxTokens=256):
     global current_model
     select_model()
+    gladosMQTT.debug(f"--->Chat completion: {chatHistory}")
 
     messages = []
 
@@ -47,19 +47,11 @@ def chatCompletion(prompt="", chatHistory=None, masterPrompt="", initialAssistan
     else:
         # Usar historial
         messages.extend(chatHistory)
-        messages.append({"role": "user", "content": prompt})
 
-    gladosMQTT.debug("==============Lanzando peticion al LLM=======================")
-    gladosMQTT.debug(messages)
+    gladosMQTT.debug(f"---->LLM : {messages}")
 
     try:
-        # Usar la nueva API
-        response = openai.Completion.create(
-            engine=current_model,
-            prompt=messages,
-            max_tokens=maxTokens,
-            stop=None
-        )
+        response = llm_mks.chat.completions.create(model=current_model, messages=messages, max_tokens=maxTokens)
         gladosMQTT.debug("========LLM OUTPUT===============")
         gladosMQTT.debug(response)
         return response
