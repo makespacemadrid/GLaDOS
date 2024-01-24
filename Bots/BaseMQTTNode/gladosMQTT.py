@@ -31,9 +31,18 @@ def subscribe(topic) :
 def publish(topic,msg,persist = False) :
 	mqttClient.publish(topic,msg,persist)
 
-def debug(msg) :
-	print(msg)
-	publish(debugTopic,str(msg))
+def debug(msg):
+    # Convertir el mensaje a una cadena, si es necesario
+    if not isinstance(msg, str):
+        try:
+            # Intenta convertir el mensaje a una cadena JSON si es un objeto complejo
+            msg = json.dumps(msg)
+        except (TypeError, ValueError):
+            # Si la conversión falla, usa una representación de string genérica
+            msg = str(msg)
+    
+    print(msg)
+    publish(debugTopic, msg)
 
 def on_connect(client, userdata, rc,arg):
 	global mqttServer

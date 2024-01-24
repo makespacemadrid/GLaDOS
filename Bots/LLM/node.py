@@ -100,9 +100,10 @@ def processSlackEvent(event):
 				response = gladosBot.ask(msg)
 				gladosMQTT.debug(response)
 				sendToSlack(respondTo,response)
-	except:
-		gladosMQTT.debug("processSlackEvent:Error gestionando evento")
-		sendToSlack(respondTo,"ERROR: Computer says nooooooo")
+	except Exception as e:
+		error_message = f"processSlackEvent: Error gestionando evento - {str(e)}"
+		gladosMQTT.debug(error_message)
+		sendToSlack(respondTo, f"ERROR: algo no ha funcionado :S - {str(e)}")
 
 def sendToSlack(id,msg):
 	response = json.dumps({"dest": id, "msg": msg})

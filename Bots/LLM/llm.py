@@ -1,6 +1,9 @@
 import openai
 from openai import OpenAI
 import os
+import gladosMQTT
+import json
+
 
 openai_api_key = os.environ.get('OPENAI_API_TOKEN')
 openai_api_url = os.environ.get('OPENAI_API_ENDPOINT')
@@ -28,32 +31,38 @@ def select_model():
     return model_list
 
 
-def chatCompletion(prompt="", chatHistory="", masterPrompt="", initialAssistant="", maxTokens=256, langChainContext='none'):
+def chatCompletion(prompt="", chatHistory=None, masterPrompt="", initialAssistant="", maxTokens=256):
     global current_model
     select_model()
-    result = ''
 
-    if (chatHistory == ''):
-        if (masterPrompt == ''):
-            masterPrompt = {"role": "system", "content": default_prompt}
-        if (initialAssistant != ''):
-            result = [masterPrompt, initialAssistant,
-                      {"role": "user", "content": prompt}]
-        else:
-            result = [masterPrompt, {"role": "user", "content": prompt}]
+    messages = []
+
+    if chatHistory is None:
+        # Usar prompts individuales
+        if masterPrompt:
+            messages.append({"role": "system", "content": masterPrompt})
+        if initialAssistant:
+            messages.append({"role": "assistant", "content": initialAssistant})
+        messages.append({"role": "user", "content": prompt})
     else:
-        result = '['
-        for msg in chatHistory:
-            print(msg, flush=True)
-            result += str(msg)
-            result += ','
-        result += str({"role": "user", "content": prompt})
-        result += ']'
-    print("==============Lanzando peticion al LLM=======================")
-    print(result, flush=True)
+        # Usar historial
+        messages.extend(chatHistory)
+        messages.append({"role": "user", "content": prompt})
 
-    completion = llm_mks.chat.completions.create(model=current_model, messages=result, max_tokens=maxTokens)
-    print("========LLM OUTPUT===============")
-#    print(completion.choices[0].message.content)
-    print(completion, flush=True)
-    return completion
+    gladosMQTT.debug("==============Lanzando peticion al LLM=======================")
+    gladosMQTT.debug(messages)
+
+    try:
+        # Usar la nueva API
+        response = openai.Completion.create(
+            engine=current_model,
+            prompt=messages,
+            max_tokens=maxTokens,
+            stop=None
+        )
+        gladosMQTT.debug("========LLM OUTPUT===============")
+        gladosMQTT.debug(response)
+        return response
+    except Exception as e:
+        gladosMQTT.debug(f"Error in chatCompletion: {str(e)}")
+        return None
