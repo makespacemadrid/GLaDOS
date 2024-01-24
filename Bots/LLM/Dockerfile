@@ -7,14 +7,15 @@ WORKDIR /app
 
 # Copia el archivo de requerimientos al contenedor
 COPY requirements.txt .
+RUN pip install -r requirements.txt
 
 # Copia el archivo node.py al contenedor
 COPY node.py .
 COPY llm.py .
 COPY GladosIA.py .
+COPY langchain.txt .
+#COPY .env .
 
-# Instala las dependencias
-RUN pip install -r requirements.txt
 USER 1000
 
 # Ejecuta el programa cuando el contenedor se inicie
