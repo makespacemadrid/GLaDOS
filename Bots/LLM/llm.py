@@ -39,10 +39,10 @@ def select_model():
     return model_list
 
 
-def chatCompletionLangChain(chatHistory,FileName):
+def chatCompletionLangChain(user_context,FileName):
+    chatHistory = user_context.get_combined_prompt()
 
-    gladosMQTT.debug(f"--->Chat completion: {chatHistory}")
-
+    gladosMQTT.debug(f"--->Chat completion langchain: {chatHistory}")
     try:
         response = index.query(json.dumps(chatHistory), llm=llm_langchain)
         gladosMQTT.debug(f"----->LLM OUTPUT: {response}")
@@ -51,14 +51,15 @@ def chatCompletionLangChain(chatHistory,FileName):
         gladosMQTT.debug(f"Error in chatCompletion: {str(e)}")
         return None
 
-def chatCompletion(prompt="", chatHistory=None, masterPrompt="", initialAssistant="", maxTokens=256):
+def chatCompletion(prompt="", user_context=None, masterPrompt="", initialAssistant="", maxTokens=256):
     global current_model
     select_model()
-    gladosMQTT.debug(f"--->Chat completion: {chatHistory}")
+
+    gladosMQTT.debug(f"--->Chat completion: {prompt}")
 
     messages = []
 
-    if chatHistory is None:
+    if user_context is None:
         # Usar prompts individuales
         if masterPrompt:
             messages.append({"role": "system", "content": masterPrompt})
@@ -67,14 +68,18 @@ def chatCompletion(prompt="", chatHistory=None, masterPrompt="", initialAssistan
         messages.append({"role": "user", "content": prompt})
     else:
         # Usar historial
-        messages.extend(chatHistory)
+#        hist=user_context.get_combined_prompt()
+#        gladosMQTT.debug(f"hist: {hist}")
+#        messages.append(hist)
+        for msg in user_context.get_combined_prompt():
+            gladosMQTT.debug(f"msg: {msg}")
+            messages.append(msg)
 
     gladosMQTT.debug(f"---->LLM : {messages}")
 
     try:
         response = llm_mks.chat.completions.create(model=current_model, messages=messages, max_tokens=maxTokens)
-        gladosMQTT.debug("========LLM OUTPUT===============")
-        gladosMQTT.debug(response)
+        gladosMQTT.debug(f"----->LLM OUTPUT: {response}")
         return response
     except Exception as e:
         gladosMQTT.debug(f"Error in chatCompletion: {str(e)}")

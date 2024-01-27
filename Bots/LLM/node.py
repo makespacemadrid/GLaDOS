@@ -92,6 +92,7 @@ def processSlackEvent(event):
 		respondTo = data['channel']
 		msg = data['text']
 		if '<@U05LXTJ7Q66>' in msg or 'glados' in msg.lower():
+			#sendToSlack(respondTo,"Pensando... dame unos segundos")	
 			response = gladosBot.ask(msg)
 			sendToSlack(respondTo,response)	
 	#Mensaje privado
@@ -99,6 +100,7 @@ def processSlackEvent(event):
 		respondTo = data['user']
 		msg = data['text']
 		response = gladosBot.ask(msg)
+		#sendToSlack(respondTo,"Pensando... dame unos segundos")
 		sendToSlack(respondTo,response)
 #	except Exception as e:
 #		error_message = f"processSlackEvent: Error gestionando evento - {str(e)}"
