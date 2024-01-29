@@ -6,4 +6,6 @@ services:
     hostname: mqtt-llm
     env_file:
       - .env
+    volumes:
+      - ./data:/data
     restart: always

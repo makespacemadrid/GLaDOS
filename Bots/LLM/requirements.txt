@@ -4,3 +4,4 @@ langchain
 chromadb
 tiktoken
 requests
+numpy

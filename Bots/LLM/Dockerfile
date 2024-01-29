@@ -15,6 +15,7 @@ COPY llm.py .
 COPY GladosIA.py .
 COPY langchain.txt .
 COPY UserContext.py .
+COPY EmbeddingManager.py .
 
 #COPY .env .
 

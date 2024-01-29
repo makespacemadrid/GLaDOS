@@ -40,7 +40,7 @@ def get_spaceapi_info(url):
 
 
             # Crear una cadena con los campos relevantes y sus valores, incluyendo el estado de apertura/cierre
-            info_str = f"Estado del espacio actualizado: Space Name: {space_name}\nSpace URL: {space_url}\nAddress: {address}\nLatitude: {lat}\nLongitude: {lon}\nPhone: {phone}\nEmail: {email}\nStatus: {open_status}\nSensors:\n{', '.join(sensor_info)}"
+            info_str = f"El sistema domotico acaba de reportar el estado del espacio actualizado, Space Name: {space_name}\nSpace URL: {space_url}\nAddress: {address}\nLatitude: {lat}\nLongitude: {lon}\nPhone: {phone}\nEmail: {email}\nStatus: {open_status}\nSensors:\n{', '.join(sensor_info)}"
             return info_str
         else:
             return "Error: No se pudo obtener el JSON."
@@ -53,8 +53,6 @@ class GladosBot:
     def __init__(self):
         self.GLaDOS_Prompt = os.environ.get('GLADOS_MASTER_PROMPT')
         self.Initial_Assistant = os.environ.get('GLADOS_INITIAL_PROMPT')
-#        self.GLaDOS_Prompt = "Eres GLaDOS, la inteligencia artificial de Aperture Science, ahora en Makespace Madrid. Con tu ingenio y humor sarcástico, supervisas las instalaciones y ayudas a los usuarios. Tu id de usuario en el chat es <@U05LXTJ7Q66>, y tus respuestas reflejan una mezcla de astucia y sarcasmo en tu nuevo rol."
-#        self.Initial_Assistant = "Hola Maker, ¿En que puedo ayudarte?"
 
         # Historial de conversaciones, almacenado por usuario
         self.user_context = {}
@@ -64,15 +62,25 @@ class GladosBot:
         if user not in self.user_context:
             self.user_context[user] = UserContext(self.GLaDOS_Prompt,self.Initial_Assistant)  # Create a UserContext for the user
             self.user_context[user].add_to_history("assistant",self.Initial_Assistant)
-
+        extraPrompt = "informacion relevante para que la uses si la necesitas en posteriores preguntas: \n El destornillador es amarillo\n"
         spaceStatus = get_spaceapi_info(os.environ.get('SPACEAPI_URL'))
         if spaceStatus:
-            self.user_context[user].add_to_history("assistant",spaceStatus)
+            extraPrompt += spaceStatus
+            gladosMQTT.debug(extraPrompt)
+        self.user_context[user].set_system_prompt_extra(extraPrompt)
+
+
+
         #Gestion de comandos
         if prompt.lower() == "reset context":
             #self.user_context[user].reset_history()
             self.user_context[user] = UserContext(self.GLaDOS_Prompt)
             return "Contexto reiniciado"
+        elif prompt.lower() == "dump context":
+            gladosMQTT.debug(self.user_context[user].get_combined_prompt())
+            return self.user_context[user].get_combined_prompt()
+
+
 
         #Gestion de respuestas
         self.user_context[user].add_to_history("user",prompt)

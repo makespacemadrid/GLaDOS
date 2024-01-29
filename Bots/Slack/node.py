@@ -17,7 +17,7 @@ from flask import Flask, request, jsonify
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
 
-
+InitialHome=False
 #Variables
 mqHost	 = os.environ.get("MQTT_HOST", "mqtt.makespacemadrid.org")
 mqPort 	 = os.environ.get("MQTT_PORT", 1883)
@@ -116,9 +116,44 @@ def openSpace(status):
 
 
 
-gladosMQTT.initMQTT(mqHost,mqPort,nodeName,on_connect,on_message,on_disconnect)
+#Funciones SLACK
 
-slack_client = WebClient(token=slack_token)
+def set_bot_status(status_text, status_emoji=":robot_face:"):
+    try:
+        slack_client.users_profile_set(
+            profile={
+                "status_text": status_text,
+                "status_emoji": status_emoji,
+                "status_expiration": 0
+            }
+        )
+    except SlackApiError as e:
+        print(f"Error al establecer el estado del bot: {e}")
+
+
+
+def publishHomeView(user_id):
+	home_view = {
+		"type": "home",
+		"blocks": [
+			{
+				"type": "section",
+				"text": {
+					"type": "mrkdwn",
+					"text": "*Hola, me llamo GLaDOS y soy la ia generativa de makespace!*\nPreguntame por privado en la pestana mensajes o mencioname en cualquier canal de los que participo"
+				}
+			}
+		]
+	}
+	try:
+		slack_client.views_publish(
+			user_id=user_id,
+			view=home_view
+		)
+		print("Pantalla de inicio publicada con éxito")
+	except SlackApiError as e:
+		print(f"Error al publicar la pantalla de inicio: {e}")
+
 
 def getSlackChannelId(name):
 	try:
@@ -173,25 +208,37 @@ def sendSlackMsgbyName(name, msg):
 	gladosMQTT.debug(f"Error al enviar mensaje: no se encuentra el usuario o canal de destino")
 
 
+
+
+#Iniciar app
+	
+gladosMQTT.initMQTT(mqHost,mqPort,nodeName,on_connect,on_message,on_disconnect)
+
+slack_client = WebClient(token=slack_token)
+slack_client.users_setPresence(presence="auto")
+set_bot_status("Boot")
+
 app = Flask(__name__)
+publishHomeView("U0A7VU47Q")
+
 @app.route('/slack/events', methods=['POST'])
 def slack_events():
 	data = request.json
+	gladosMQTT.debug(f"SLACK EVENT: {json.dumps(data)}")
 	# Desafío de verificación de Slack
 	if data.get('type') == 'url_verification':
 		return jsonify({'challenge': data.get('challenge')})
 
 	if data['type'] == 'event_callback':
 		event = data['event']
+		set_bot_status('Processing')
 		gladosMQTT.publish(topic_slack_event, json.dumps(event))
-#		if 'bot_id' not in event and (event['type'] == 'message'):
-#			try:
-#				response = slack_client.chat_postMessage(
-#					channel=event['channel'],
-#					text=askGLaDOS(event['text'])
-#				)
-#			except SlackApiError as e:
-#				print(f"Error sending message: {e.response['error']}")
+
+		if event.get('type') == 'app_home_opened':
+			user_id = event.get('user')
+			if user_id:
+				publishHomeView(user_id)
+	set_bot_status('Idle')
 	return jsonify({'status': 'ok'}), 200
 
 

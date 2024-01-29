@@ -23,7 +23,7 @@ class GoogleCalendarClient:
                 self.creds.refresh(Request())
             else:
                 flow = InstalledAppFlow.from_client_secrets_file(
-                    '/data/credentials.json', self.scopes)
+                    '/data/`credentials.json', self.scopes)
                 self.creds = flow.run_local_server(port=0)
             with open('token.pickle', 'wb') as token:
                 pickle.dump(self.creds, token)
