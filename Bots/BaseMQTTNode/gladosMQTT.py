@@ -106,7 +106,7 @@ def initMQTT(host,port,name,connectedCallback,msgCallback,disconnectedCallback) 
 	print("[GladosNode] Connecting : "+str(mqttServer)+" Port:"+str(mqttPort)+ " node: " + str(name))
 
 	try:
-		mqttClient.connect(mqttServer,port=mqttPort,keepalive=120)
+		mqttClient.connect(str(mqttServer),port=int(mqttPort),keepalive=120)
 	except:
 		print("Cant connect, will retry automatically")
 	mqttClient.loop_start()

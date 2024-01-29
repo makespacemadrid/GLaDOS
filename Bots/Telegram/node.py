@@ -5,20 +5,30 @@ import gladosMQTT
 import platform
 from telethon import TelegramClient, events
 
-#ENV
-from dotenv import load_dotenv
-load_dotenv()
 
 # Configuración de Telegram
 api_id = os.environ.get("TELEGRAM_API_ID")  # Reemplaza con tu propio api_id
 api_hash = os.environ.get("TELEGRAM_API_HASH")  # Reemplaza con tu propio api_hash
-telegram_token = os.environ.get("TELEGRAM_BOT_TOKEN")  # Reemplaza con tu token de bot
+telegram_token = os.environ.get("TELEGRAM_BOT_TOKEN") # Reemplaza con tu token de bot
 
 # Configuración MQTT
 #Variables
-mqHost	 = os.environ.get("MQTT_HOST", "mqtt.makespacemadrid.org") #WTF! No entiendo que pasa con las variables de entorno que vienen del compose :S
-mqPort 	 = os.environ.get("MQTT_PORT", 1883)
+mqHost	 = str(os.environ.get("MQTT_HOST")) #WTF! No entiendo que pasa con las variables de entorno que vienen del compose :S
+mqPort 	 = int(os.environ.get("MQTT_PORT"))
 nodeName = platform.node()
+
+if not telegram_token:
+    raise ValueError("No se encontró el token del bot de Telegram.")
+if not api_hash:
+    raise ValueError("No se encontró el api_hash del bot de Telegram.")
+if not api_id:
+    raise ValueError("No se encontró el api_id del bot de Telegram.")
+if not nodeName:
+    raise ValueError("No se encontró el nodeName del bot de Telegram.")
+if not mqHost:
+    raise ValueError("No se encontró el mqHost del bot de Telegram.")
+if not mqPort:
+    raise ValueError("No se encontró el mqPort del bot de Telegram.")
 
 
 # Temas MQTT para comunicarse con otros componentes
@@ -56,22 +66,28 @@ async def sendTelegramMsg(user_id, msg):
     gladosMQTT.debug(f"--->Respuesta a Telegram: {user_id} : {msg}")
     await telegram_client.send_message(user_id, msg)    
 
+
 # Evento para manejar nuevos mensajes en Telegram
 @telegram_client.on(events.NewMessage)
 async def handle_new_message(event):
-    gladosMQTT.publish(topic_telegram_event, json.dumps(event)) 
-    if event.is_private:
-        msg = event.message.message
-        chat_id = event.message.chat_id
-        await event.respond('Recibí tu mensaje: ' + msg)  # Respuesta de ejemplo
+	gladosMQTT.debug(event.stringify())
+	event_data = {
+		'message_text': event.message.message if event.message else None,
+		'sender_id': event.sender_id,
+		'chat_id': event.chat_id,
+		# Agrega aquí otros campos relevantes
+	}
+	gladosMQTT.publish(topic_telegram_event, json.dumps(event_data))
+	if event.is_private:
+		msg = event.message.message
+		chat_id = event.message.chat_id
+		await event.respond('Recibí tu mensaje: ' + msg)  # Respuesta de ejemplo  
 
-# Iniciar el bot de Telegram
-def start_telegram_bot():
-    with telegram_client:
-        telegram_client.run_until_disconnected()
 
 
 
-if __name__ == "__main__":
-    gladosMQTT.initMQTT(mqHost,mqPort,nodeName,on_connect,on_message,on_disconnect)
-    start_telegram_bot()
+gladosMQTT.initMQTT(mqHost,mqPort,nodeName,on_connect,on_message,on_disconnect)
+telegram_client.start(bot_token=telegram_token)
+telegram_client.run_until_disconnected()
+
+

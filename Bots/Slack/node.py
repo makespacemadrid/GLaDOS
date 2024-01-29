@@ -19,8 +19,8 @@ from slack_sdk.errors import SlackApiError
 
 InitialHome=False
 #Variables
-mqHost	 = os.environ.get("MQTT_HOST", "mqtt.makespacemadrid.org")
-mqPort 	 = os.environ.get("MQTT_PORT", 1883)
+mqHost	 = str(os.environ.get("MQTT_HOST"))
+mqPort 	 = int(os.environ.get("MQTT_PORT"))
 nodeName = platform.node()
 
 slack_token = os.environ.get("SLACK_API_TOKEN")

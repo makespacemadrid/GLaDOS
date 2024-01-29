@@ -2,12 +2,10 @@ version: '3'
 
 
 services:
-  mqtt-slack:
+  mqtt-telegram:
     build: .
     image: makespacemadrid/glados-mqtt-telegram:latest
     hostname: mqtt-telegram
     env_file:
       - .env
     restart: always
-    ports:
-      - 5000:5000

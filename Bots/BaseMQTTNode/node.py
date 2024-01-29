@@ -12,8 +12,8 @@ import time
 
 
 #Variables
-mqHost	 = os.environ.get("MQTT_HOST", "mqtt.makespacemadrid.org")
-mqPort 	 = os.environ.get("MQTT_PORT", 1883)
+mqHost	 = os.environ.get("MQTT_HOST")
+mqPort 	 = os.environ.get("MQTT_PORT")
 nodeName = platform.node()
 
 
@@ -36,6 +36,5 @@ try:
 	while True:
 		#Loop principal del programa
 		time.sleep(10)
-		print("ping!")
 except KeyboardInterrupt:
 	print('interrupted!')
