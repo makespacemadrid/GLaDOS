@@ -40,7 +40,7 @@ def get_spaceapi_info(url):
 
 
             # Crear una cadena con los campos relevantes y sus valores, incluyendo el estado de apertura/cierre
-            info_str = f"El sistema domotico acaba de reportar el estado del espacio actualizado, Space Name: {space_name}\nSpace URL: {space_url}\nAddress: {address}\nLatitude: {lat}\nLongitude: {lon}\nPhone: {phone}\nEmail: {email}\nStatus: {open_status}\nSensors:\n{', '.join(sensor_info)}"
+            info_str = f"Reporte actualizado del sistema domotico con el estado del espacio: Space Name: {space_name}\nSpace URL: {space_url}\nAddress: {address}\nLatitude: {lat}\nLongitude: {lon}\nPhone: {phone}\nEmail: {email}\nStatus: {open_status}\nSensors:\n{', '.join(sensor_info)}"
             return info_str
         else:
             return "Error: No se pudo obtener el JSON."
@@ -62,7 +62,7 @@ class GladosBot:
         if user not in self.user_context:
             self.user_context[user] = UserContext(self.GLaDOS_Prompt,self.Initial_Assistant)  # Create a UserContext for the user
             self.user_context[user].add_to_history("assistant",self.Initial_Assistant)
-        extraPrompt = "informacion relevante para que la uses si la necesitas en posteriores preguntas: \n El destornillador es amarillo\n"
+        extraPrompt = "informacion que puede ser relevante en las consultas posteriores: \n"
         spaceStatus = get_spaceapi_info(os.environ.get('SPACEAPI_URL'))
         if spaceStatus:
             extraPrompt += spaceStatus

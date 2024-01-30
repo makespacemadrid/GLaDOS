@@ -1,6 +1,4 @@
 version: '3'
-
-
 services:
   mqtt-telegram:
     build: .
@@ -8,4 +6,6 @@ services:
     hostname: mqtt-telegram
     env_file:
       - .env
+    volumes:
+      - ./data:/data
     restart: always

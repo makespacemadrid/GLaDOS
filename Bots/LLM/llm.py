@@ -71,7 +71,7 @@ def chatCompletionLangChain(user_context,FileName):
         gladosMQTT.debug(f"Error in chatCompletion: {str(e)}")
         return None
 
-def chatCompletion(prompt="", user_context=None, masterPrompt="", initialAssistant="", maxTokens=256):
+def chatCompletion(prompt="", user_context=None, masterPrompt="", initialAssistant="", maxTokens=512):
     global current_model
     select_model()
 

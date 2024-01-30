@@ -19,8 +19,8 @@ from slack_sdk.errors import SlackApiError
 
 InitialHome=False
 #Variables
-mqHost	 = str(os.environ.get("MQTT_HOST"))
-mqPort 	 = int(os.environ.get("MQTT_PORT"))
+mqHost	 = os.environ.get("MQTT_HOST")
+mqPort 	 = os.environ.get("MQTT_PORT")
 nodeName = platform.node()
 
 slack_token = os.environ.get("SLACK_API_TOKEN")
@@ -216,7 +216,7 @@ gladosMQTT.initMQTT(mqHost,mqPort,nodeName,on_connect,on_message,on_disconnect)
 
 slack_client = WebClient(token=slack_token)
 slack_client.users_setPresence(presence="auto")
-set_bot_status("Boot")
+#set_bot_status("Boot")
 
 app = Flask(__name__)
 publishHomeView("U0A7VU47Q")
@@ -231,14 +231,14 @@ def slack_events():
 
 	if data['type'] == 'event_callback':
 		event = data['event']
-		set_bot_status('Processing')
+	#	set_bot_status('Processing')
 		gladosMQTT.publish(topic_slack_event, json.dumps(event))
 
 		if event.get('type') == 'app_home_opened':
 			user_id = event.get('user')
 			if user_id:
 				publishHomeView(user_id)
-	set_bot_status('Idle')
+	#set_bot_status('Idle')
 	return jsonify({'status': 'ok'}), 200
 
 

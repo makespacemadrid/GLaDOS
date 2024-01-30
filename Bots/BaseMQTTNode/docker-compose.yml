@@ -7,5 +7,5 @@ services:
 #    ports:
 #      - "8080:8080" # Cambia el puerto si es necesario
     environment:
-      - MQTT_PORT = 1883
-      - MQTT_HOST = mqtt.makespacemadrid.org
+      - MQTT_PORT=1883
+      - MQTT_HOST=mqtt.makespacemadrid.org
