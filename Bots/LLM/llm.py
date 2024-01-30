@@ -1,6 +1,5 @@
 from openai import OpenAI
 import os
-import gladosMQTT
 import json
 
 from langchain.chat_models import ChatOpenAI
@@ -40,11 +39,6 @@ def list_files_in_directory(directory_path):
     return file_paths
 
 
-my_embeddings = EmbeddingManager()
-my_embeddings.ingest(list_files_in_directory('/data'))  # Rutas a los archivos de texto
-
-
-
 
 def select_model():
     model_list = llm_mks.models.list()
@@ -55,27 +49,26 @@ def select_model():
     print(current_model)
     return model_list
 
+my_embeddings = EmbeddingManager()
+my_embeddings.ingest(list_files_in_directory('/data'))  # Rutas a los archivos de texto
 
-def chatCompletionLangChain(user_context,FileName):
-    chatHistory = user_context.get_combined_prompt()
-
-    gladosMQTT.debug(f"--->Chat completion langchain: {chatHistory}")
-    try:
+#def chatCompletionLangChain(user_context,FileName):
+#    chatHistory = user_context.get_combined_prompt()
+#
+#    try:
 #        response = index.query(json.dumps(chatHistory), llm=llm_langchain)
-        search_results = my_embeddings.search(user_context.get_last_prompt())
-        gladosMQTT.debug(json.dumps(search_results, indent=4))  # Imprimir resultados formateados
-        response=json.dumps(search_results, indent=4)
-        gladosMQTT.debug(f"----->LLM OUTPUT: {response}")
-        return response
-    except Exception as e:
-        gladosMQTT.debug(f"Error in chatCompletion: {str(e)}")
-        return None
+#        search_results = my_embeddings.search(user_context.get_last_prompt())
+#        gladosMQTT.debug(json.dumps(search_results, indent=4))  # Imprimir resultados formateados
+#        response=json.dumps(search_results, indent=4)
+#        gladosMQTT.debug(f"----->LLM OUTPUT: {response}")
+#        return response
+#    except Exception as e:
+#        gladosMQTT.debug(f"Error in chatCompletion: {str(e)}")
+#        return None
 
 def chatCompletion(prompt="", user_context=None, masterPrompt="", initialAssistant="", maxTokens=512):
     global current_model
     select_model()
-
-    gladosMQTT.debug(f"--->Chat completion: {prompt}")
 
     messages = []
 
@@ -92,16 +85,11 @@ def chatCompletion(prompt="", user_context=None, masterPrompt="", initialAssista
 #        gladosMQTT.debug(f"hist: {hist}")
 #        messages.append(hist)
         for msg in user_context.get_combined_prompt():
-            gladosMQTT.debug(f"msg: {msg}")
             messages.append(msg)
-
-    gladosMQTT.debug(f"---->LLM : {messages}")
 
     try:
         response = llm_mks.chat.completions.create(model=current_model, messages=messages, max_tokens=maxTokens)
-        gladosMQTT.debug(f"----->LLM OUTPUT: {response}")
         return response
     except Exception as e:
-        gladosMQTT.debug(f"Error in chatCompletion: {str(e)}")
         return None
     

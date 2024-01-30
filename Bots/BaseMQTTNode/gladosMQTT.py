@@ -1,147 +1,68 @@
 # -*- coding: utf-8 -*-
-
 import paho.mqtt.client as mqtt
-import platform
-import time
-import os
 import json
 
+class GladosMQTT:
+    def __init__(self, host="192.168.1.1", port=1883, name="test-node", msg_callback=None):
+        self.mqttServer = host
+        self.mqttPort = port
+        self.nodeName = name
+        self.baseTopic = "node/" + self.nodeName
+        self.debugTopic = self.baseTopic + "/debug"
+        self.mqttClient = mqtt.Client()
+        self.topics = []
+        self.nodeMsgCallback = msg_callback if msg_callback is not None else self.dummy
 
+        self.mqttClient.on_connect = self.on_connect
+        self.mqttClient.on_message = self.on_message
+        self.mqttClient.on_disconnect = self.on_disconnect
 
-#Carga inicial de variables, aunque el valor de estas se reescribira al ejecutar initMQTT
-mqttServer			= "192.168.1.1"
-mqttPort			= 1883
-nodeName			= "test-node"
-baseTopic			= "node/test-node"
-debugTopic			= baseTopic+"debug"
-mqttClient 	   		= mqtt.Client()
+    def set_topics(self, topics):
+        self.topics = topics
 
+    def dummy(self, *args, **kwargs):
+        self.debug("Dummy function called")
 
-def dummy() :
-	debug(dummy)
+    def publish(self, topic, msg, persist=False):
+        self.mqttClient.publish(topic, msg, persist)
 
-nodeConnectedCallback 		= dummy
-nodeMsgCallback				= dummy
-nodeDisconnectedCallback	= dummy
+    def debug(self, msg):
+        if not isinstance(msg, str):
+            try:
+                msg = json.dumps(msg)
+            except (TypeError, ValueError):
+                msg = str(msg)
 
-def subscribe(topic) :
-	mqttClient.subscribe(topic)
-	
-	
-def publish(topic,msg,persist = False) :
-	mqttClient.publish(topic,msg,persist)
+        print(msg)
+        self.publish(self.debugTopic, msg)
 
-def debug(msg):
-    # Convertir el mensaje a una cadena, si es necesario
-    if not isinstance(msg, str):
+    def on_connect(self, client, userdata, flags, rc):
+        self.debug("[GladosNode] Connected with result code " + str(rc))
+        for topic in self.topics:
+            self.mqttClient.subscribe(topic)
+
+    def on_message(self, client, userdata, msg):
+#        try:
+#            self.debug("[GladosNode] mqtt_rcv: { " + msg.topic + " - " + msg.payload.decode() + " }")
+#        except Exception as e:
+#            self.debug("[GladosNode] mqtt_rcv error: " + str(e))
+        self.nodeMsgCallback(client, userdata, msg)
+
+    def on_disconnect(self, client, userdata, rc):
+        self.debug("[GladosNode] Disconnected with result code " + str(rc))
+
+    def init_mqtt(self):
+        self.debug("[GladosNode] Connecting : " + str(self.mqttServer) + " Port:" + str(self.mqttPort) + " node: " + str(self.nodeName))
         try:
-            # Intenta convertir el mensaje a una cadena JSON si es un objeto complejo
-            msg = json.dumps(msg)
-        except (TypeError, ValueError):
-            # Si la conversión falla, usa una representación de string genérica
-            msg = str(msg)
-    
-    print(msg)
-    publish(debugTopic, msg)
+            self.mqttClient.connect(self.mqttServer, port=self.mqttPort, keepalive=120)
+        except Exception as e:
+            self.debug("Cannot connect: " + str(e))
+        self.mqttClient.loop_start()
 
-def on_connect(client, userdata, rc,arg):
-	global mqttServer
-	global mqttPort
-	global nodeName
-	global baseTopic
-	global debugTopic
-
-	debug("[GladosNode] Connected with result code "+str(rc))
-	debug("[GladosNode] Node name      : " + nodeName)
-	debug("[GladosNode] Base topic     : " + baseTopic)
-	debug("[GladosNode] Debug topic    : " + debugTopic)
-	debug("[GladosNode] mosquitto_sub -h " + mqttServer + " -t " + debugTopic)
-
-
-	publish("node/hello", "Hello! Im "+ nodeName)
-	nodeConnectedCallback(client, userdata, rc,arg)
-
-
-# The callback for when a PUBLISH message is received from the server.
-# Aqui recibimos los mensajes, y si no hay que hacer nada con ellos se lo pasamos al callback del nodo para que los procese 
-def on_message(client, userdata, msg):
-
-	try:
-		debug("[GladosNode] mqtt_rcv: {  "+msg.topic + " - " +msg.payload+ "  }")
-	except:	
-		debug("[GladosNode] mqtt_rcv: not str ")
-	nodeMsgCallback(client, userdata, msg)
-
-def on_disconnect(client, userdata, rc):
-	nodeDisconnectedCallback(client, userdata, rc)
-
-#Inicia mqtt y devuelve el control
-def initMQTT(host,port,name,connectedCallback,msgCallback,disconnectedCallback) :
-	global mqttServer
-	global mqttPort
-	global nodeName
-	global baseTopic
-	global debugTopic
-	global mqttClient
-
-	global nodeConnectedCallback
-	global nodeMsgCallback
-	global nodeDisconnectedCallback
-
-	mqttServer			= host
-	mqttPort			= port
-	nodeName			= name
-	baseTopic			= "node/"+nodeName+"/"
-	debugTopic			= baseTopic+"debug"
-
-
-	nodeConnectedCallback 		= connectedCallback
-	nodeMsgCallback				= msgCallback
-	nodeDisconnectedCallback	= disconnectedCallback
-
-	mqttClient.on_connect    	= on_connect
-	mqttClient.on_message    	= on_message
-	mqttClient.on_disconnect 	= on_disconnect
-
-	print("[GladosNode] Connecting : "+str(mqttServer)+" Port:"+str(mqttPort)+ " node: " + str(name))
-
-	try:
-		mqttClient.connect(str(mqttServer),port=int(mqttPort),keepalive=120)
-	except:
-		print("Cant connect, will retry automatically")
-	mqttClient.loop_start()
-
-#Inicia mqtt y captura la ejecucion
-def initMQTTandLoopForever(host,port,name,connectedCallback,msgCallback,disconnectedCallback) :
-	global mqttServer
-	global mqttPort
-	global nodeName
-	global baseTopic
-	global debugTopic
-
-	global nodeConnectedCallback
-	global nodeMsgCallback
-	global nodeDisconnectedCallback
-
-	mqttServer			= host
-	mqttPort			= port
-	nodeName			= name
-	baseTopic			= "node/"+nodeName+"/"
-	debugTopic			= baseTopic+"debug"
-
-
-	nodeConnectedCallback 		= connectedCallback
-	nodeMsgCallback				= msgCallback
-	nodeDisconnectedCallback	= disconnectedCallback
-
-	mqttClient.on_connect    	= on_connect
-	mqttClient.on_message    	= on_message
-	mqttClient.on_disconnect 	= on_disconnect
-
-	print("[GladosNode] Connecting : "+str(mqttServer)+" Port:"+str(mqttPort)+ " node: " + str(name))
-
-	try:
-		mqttClient.connect(mqttServer,port=mqttPort,keepalive=120)
-	except:
-		print("Cant connect, will retry automatically")
-	mqttClient.loop_forever()
+    def init_mqtt_and_loop_forever(self):
+        self.debug("[GladosNode] Connecting : " + str(self.mqttServer) + " Port:" + str(self.mqttPort) + " node: " + str(self.nodeName))
+        try:
+            self.mqttClient.connect(self.mqttServer, port=self.mqttPort, keepalive=120)
+        except Exception as e:
+            self.debug("Cannot connect: " + str(e))
+        self.mqttClient.loop_forever()

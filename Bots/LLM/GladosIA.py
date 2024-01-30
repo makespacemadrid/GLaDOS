@@ -1,5 +1,4 @@
 import llm
-import gladosMQTT
 from UserContext import UserContext  # Import UserContext
 import os
 import requests
@@ -50,15 +49,19 @@ def get_spaceapi_info(url):
 
 
 class GladosBot:
-    def __init__(self):
+    def __init__(self,debug=None):
         self.GLaDOS_Prompt = os.environ.get('GLADOS_MASTER_PROMPT')
         self.Initial_Assistant = os.environ.get('GLADOS_INITIAL_PROMPT')
+        self.debug = debug if debug else self.default_debug  # Utiliza la función de depuración por defecto si no se proporciona una
 
         # Historial de conversaciones, almacenado por usuario
         self.user_context = {}
 
+    def default_debug(self, message):
+        # Función de depuración por defecto que imprime en la terminal
+        print(f"DEBUG: {message}")
+
     def ask(self, prompt, user="default"):
-        gladosMQTT.debug(f"--->Glados.ASK, user: {user}, prompt: {prompt}")
         if user not in self.user_context:
             self.user_context[user] = UserContext(self.GLaDOS_Prompt,self.Initial_Assistant)  # Create a UserContext for the user
             self.user_context[user].add_to_history("assistant",self.Initial_Assistant)
@@ -66,7 +69,6 @@ class GladosBot:
         spaceStatus = get_spaceapi_info(os.environ.get('SPACEAPI_URL'))
         if spaceStatus:
             extraPrompt += spaceStatus
-            gladosMQTT.debug(extraPrompt)
         self.user_context[user].set_system_prompt_extra(extraPrompt)
 
 
@@ -77,9 +79,7 @@ class GladosBot:
             self.user_context[user] = UserContext(self.GLaDOS_Prompt)
             return "Contexto reiniciado"
         elif prompt.lower() == "dump context":
-            gladosMQTT.debug(self.user_context[user].get_combined_prompt())
             return self.user_context[user].get_combined_prompt()
-
 
 
         #Gestion de respuestas

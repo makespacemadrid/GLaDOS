@@ -9,10 +9,10 @@ COPY requirements.txt .
 
 # Copia el archivo node.py al contenedor
 COPY gladosMQTT.py .
-COPY node.py .
+COPY main.py .
 
 # Instala las dependencias
 RUN pip install -r requirements.txt
 
 # Ejecuta el programa cuando el contenedor se inicie
-CMD ["python", "node.py"]
+CMD ["python", "main.py"]

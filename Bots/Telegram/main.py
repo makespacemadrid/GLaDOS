@@ -1,25 +1,20 @@
 # -*- coding: utf-8 -*-
 import os
 import json
-import gladosMQTT
 import platform
+from gladosMQTT import GladosMQTT  # Asegúrate de que el import sea correcto
 from telethon import TelegramClient, events
 import asyncio
 import requests
 
-
 # Configuración de Telegram
-api_id = os.environ.get("TELEGRAM_API_ID")  # Reemplaza con tu propio api_id
-api_hash = os.environ.get("TELEGRAM_API_HASH")  # Reemplaza con tu propio api_hash
-telegram_token = os.environ.get("TELEGRAM_BOT_TOKEN") # Reemplaza con tu token de bot
-
-# Variable global para almacenar el ID del bot
-bot_id = None
+api_id = os.environ.get("TELEGRAM_API_ID")
+api_hash = os.environ.get("TELEGRAM_API_HASH")
+telegram_token = os.environ.get("TELEGRAM_BOT_TOKEN")
 
 # Configuración MQTT
-#Variables
-mqHost	 = str(os.environ.get("MQTT_HOST")) #WTF! No entiendo que pasa con las variables de entorno que vienen del compose :S
-mqPort 	 = int(os.environ.get("MQTT_PORT"))
+mqHost = os.environ.get("MQTT_HOST")
+mqPort = int(os.environ.get("MQTT_PORT"))
 nodeName = platform.node()
 
 if not telegram_token:
@@ -35,15 +30,24 @@ if not mqHost:
 if not mqPort:
     raise ValueError("No se encontró el mqPort del bot de Telegram.")
 
-
-# Temas MQTT para comunicarse con otros componentes
+# Temas MQTT
 topic_telegram = "comms/telegram"
 topic_telegram_send_msg = topic_telegram + "/send_id"
 topic_telegram_event = topic_telegram + "/event"
 
 
-# Iniciar cliente de Telegram
-telegram_client = TelegramClient('/data/tg_sess.ignore', api_id, api_hash)
+# Definición de los callbacks para MQTT
+def on_mqtt_message(client, userdata, msg):
+    if msg.topic == topic_telegram_send_msg:
+        try:
+            payload = msg.payload.decode('utf-8')
+            data = json.loads(payload)
+            dest = data['dest']
+            content = data['msg']
+            send_telegram_message_sync(dest, content)
+        except Exception as e:
+            glados_mqtt.debug(f"Error al enviar mensaje: {e}")
+
 
 
 async def send_audio_to_transcription_api(audio_file_path):
@@ -65,55 +69,19 @@ async def send_audio_to_transcription_api(audio_file_path):
         return(f"Error al enviar el archivo de audio a la API: {e}")
 
 
+# Iniciar cliente de Telegram
+telegram_client = TelegramClient('/data/tg_sess.ignore', api_id, api_hash)
 
-def subscribeTopics() :
-	gladosMQTT.subscribe(topic_telegram_send_msg)
-
-
-def on_connect(client, userdata, rc,arg):
-	subscribeTopics()
-
-def on_disconnect(client, userdata, rc):
-	gladosMQTT.debug("Disconnected! rc: "+str(rc))
-
-
-loop = asyncio.get_event_loop()
-
-
+# Función para enviar mensajes de Telegram de forma síncrona
 def send_telegram_message_sync(user_id, message):
     asyncio.run_coroutine_threadsafe(telegram_client.send_message(user_id, message), loop)
-
-
-
-
-def on_message(client, userdata, msg):
-    if msg.topic == topic_telegram_send_msg:
-        try:
-            payload = msg.payload.decode('utf-8')
-            data = json.loads(payload)
-            dest = data['dest']
-            content = data['msg']
-
-            # Llama al callback síncrono
-            send_telegram_message_sync(dest, content)
-        except Exception as e:
-            gladosMQTT.debug(f"Error al enviar mensaje: {e}")
-
- 
-
-
-
-
 
 # Evento para manejar nuevos mensajes en Telegram
 @telegram_client.on(events.NewMessage)
 async def handle_new_message(event):
-    gladosMQTT.debug(event.stringify())
-#    global bot_id
-    # Si no se ha establecido el ID del bot, obténgalo
-#    if bot_id is None:
-#        me = await telegram_client.get_me()
-#        bot_id = me.id
+    glados_mqtt.debug(event.stringify())
+
+    # Procesamiento de mensajes de voz o audio
     if event.message.voice or event.message.audio:
         # Descargar el archivo de audio
         audio_file_path = await telegram_client.download_media(event.message, file='/tmp/audio/')
@@ -125,23 +93,28 @@ async def handle_new_message(event):
             'chat_id': event.chat_id,
             # Agrega aquí otros campos relevantes
         }
-        gladosMQTT.publish(topic_telegram_event, json.dumps(event_data))
+        glados_mqtt.publish(topic_telegram_event, json.dumps(event_data))
         return
 
-    if event.is_private and event.sender_id != 771352834 :
-#        await event.respond('Procesando...')
+    # Procesamiento de mensajes de texto
+    if event.is_private and event.sender_id != 771352834:  # Asegúrate de actualizar este ID según sea necesario
         event_data = {
             'message_text': event.message.message if event.message else None,
             'sender_id': event.sender_id,
             'chat_id': event.chat_id,
             # Agrega aquí otros campos relevantes
         }
-        gladosMQTT.publish(topic_telegram_event, json.dumps(event_data))
+        glados_mqtt.publish(topic_telegram_event, json.dumps(event_data))
 
+
+
+# Iniciar la instancia de GladosMQTT
+glados_mqtt = GladosMQTT(host=mqHost, port=mqPort, name=nodeName, msg_callback=on_mqtt_message)
+glados_mqtt.set_topics([topic_telegram_send_msg])
 
 
 if __name__ == "__main__":
-    gladosMQTT.initMQTT(mqHost, mqPort, nodeName, on_connect, on_message, on_disconnect)
+    glados_mqtt.init_mqtt()
     telegram_client.start(bot_token=telegram_token)
+    loop = asyncio.get_event_loop()
     loop.run_until_complete(telegram_client.run_until_disconnected())
-

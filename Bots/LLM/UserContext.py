@@ -1,6 +1,4 @@
 import json
-import gladosMQTT
-
 
 class UserContext:
     def __init__(self, master_prompt="", initial_assistant=""):
@@ -54,8 +52,6 @@ class UserContext:
 
         # Convierte la lista de mensajes en una cadena JSON válida
         #combined_prompt_json = json.dumps(combined_prompt)
-
-        gladosMQTT.debug(f"combined: {combined_prompt}")
 
         return combined_prompt
 
