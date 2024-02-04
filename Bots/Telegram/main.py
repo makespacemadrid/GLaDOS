@@ -6,6 +6,8 @@ from gladosMQTT import GladosMQTT  # Asegúrate de que el import sea correcto
 from telethon import TelegramClient, events
 import asyncio
 import requests
+from io import BytesIO
+
 
 # Configuración de Telegram
 api_id = os.environ.get("TELEGRAM_API_ID")
@@ -45,9 +47,30 @@ def on_mqtt_message(client, userdata, msg):
             dest = data['dest']
             content = data['msg']
             send_telegram_message_sync(dest, content)
+            generate_and_send_audio_response(dest,content)
         except Exception as e:
             glados_mqtt.debug(f"Error al enviar mensaje: {e}")
 
+
+def generate_and_send_audio_response(user_id, text):
+    coquiurl = "http://coqui-es.makespacemadrid.org"  # Reemplaza con la URL de tu API de Coqui TTS
+    params = {
+        "text": text,
+        "speaker_id": "",
+        "style_wav": "",
+        "language_id": "es"
+    }
+
+    try:
+        coqui_response = requests.get(coquiurl, params=params)
+        coqui_response.raise_for_status()  # Esto provocará una excepción si la respuesta no es exitosa
+
+        # Enviar el audio directamente a Telegram sin guardar en disco
+        audio_bytes = BytesIO(coqui_response.content)
+        audio_bytes.name = "glados.wav"
+        send_telegram_audio_sync(user_id, audio_bytes)
+    except requests.RequestException as e:
+        glados_mqtt.debug(f"Error al generar respuesta de audio: {e}")
 
 
 async def send_audio_to_transcription_api(audio_file_path):
@@ -66,7 +89,7 @@ async def send_audio_to_transcription_api(audio_file_path):
         response.raise_for_status()  # Esto provocará una excepción si la respuesta no es exitosa
         return response.text  # Retorna el contenido de la transcripción
     except requests.RequestException as e:
-        return(f"Error al enviar el archivo de audio a la API: {e}")
+        glados_mqtt.debug(f"Error al enviar el archivo de audio a la API: {e}")
 
 
 # Iniciar cliente de Telegram
@@ -75,6 +98,9 @@ telegram_client = TelegramClient('/data/tg_sess.ignore', api_id, api_hash)
 # Función para enviar mensajes de Telegram de forma síncrona
 def send_telegram_message_sync(user_id, message):
     asyncio.run_coroutine_threadsafe(telegram_client.send_message(user_id, message), loop)
+
+def send_telegram_audio_sync(user_id, audio_bytes):
+    asyncio.run_coroutine_threadsafe(telegram_client.send_file(user_id, audio_bytes, voice_note=True), loop)
 
 # Evento para manejar nuevos mensajes en Telegram
 @telegram_client.on(events.NewMessage)
