@@ -29,12 +29,14 @@ topic_report_space_open = "space/report_open"
 topic_last_open_status = "space/last_open_status"
 topic_slack = "comms/slack"
 topic_slack_event = topic_slack+"/event"
+topic_slack_incoming_msg = topic_slack+"/incoming_msg"
 topic_slack_send_msg_id = topic_slack+"/send_id"
 topic_slack_send_msg_name = topic_slack+"/send_name"
+topic_slack_edit_msg = topic_slack+"/edit_msg"
 
 # Instancia de GladosMQTT
 glados_mqtt = GladosMQTT(host=mqHost, port=mqPort, name=nodeName)
-glados_mqtt.set_topics([topic_spaceapi, topic_last_open_status, topic_slack_send_msg_id, topic_slack_send_msg_name])
+glados_mqtt.set_topics([topic_spaceapi, topic_last_open_status, topic_slack_send_msg_id, topic_slack_send_msg_name,topic_slack_edit_msg])
 
 # Cliente de Slack
 slack_client = WebClient(token=slack_token)
@@ -84,6 +86,14 @@ def on_mqtt_message(client, userdata, msg):
         except json.JSONDecodeError as e:
             glados_mqtt.debug("Error al procesar mensaje para Slack (nombre): " + str(e))
 
+    elif msg.topic == topic_slack_edit_msg:
+        try:
+            payload = msg.payload.decode('utf-8')
+            data = json.loads(payload)
+            editSlackMsg(data['channel_id'], data['reply_msg_id'], data['message'])
+        except json.JSONDecodeError as e:
+            glados_mqtt.debug(f"Error processing message edit request: {e}")
+
 # Función adicional para manejar el estado de apertura
 def openSpace(status):
     global last_open_status
@@ -97,17 +107,129 @@ def openSpace(status):
         glados_mqtt.publish(topic_last_open_status, 'true', True)
         last_open_status = True
         sendSlackMsgbyName("abierto-cerrado", "¡Espacio Abierto! Let's Make!")
+        glados_mqtt.publish(topic_slack_send_msg_name, json.dumps({'dest': "abierto-cerrado", 'msg': "¡Espacio Abierto! Let's Make!"}), True)
     elif not status and last_open_status:
         glados_mqtt.debug("Espacio cerrado")
         glados_mqtt.publish(topic_last_open_status, 'false', True)
         last_open_status = False
         sendSlackMsgbyName("abierto-cerrado", "¡Espacio Cerrado! ZZzzZZ")
 
+        glados_mqtt.publish(topic_slack_send_msg_name, json.dumps({'dest': "abierto-cerrado", 'msg': "¡Espacio Cerrado! ZZzzZZ"}), True)
 # Configuración de callbacks MQTT
 glados_mqtt.mqttClient.on_message = on_mqtt_message
 
 # Iniciar cliente de Slack
 slack_client = WebClient(token=slack_token)
+
+# Variables para almacenar la lista de canales y usuarios en caché
+cached_slack_channels = {}
+cached_slack_users = {}
+
+# Función para cargar y almacenar en caché los canales de Slack
+def cache_slack_channels():
+    global cached_slack_channels
+    try:
+        response = slack_client.conversations_list()
+        cached_slack_channels = {channel['id']: channel['name'] for channel in response['channels']}
+    except SlackApiError as e:
+        glados_mqtt.debug(f"Error getting Slack channel list: {e}")
+
+# Función para cargar y almacenar en caché los usuarios de Slack
+def cache_slack_users():
+    global cached_slack_users
+    try:
+        response = slack_client.users_list()
+        cached_slack_users = {user['id']: user['name'] for user in response['members'] if 'id' in user}
+    except SlackApiError as e:
+        glados_mqtt.debug(f"Error obtaining Slack user list: {e}")
+
+# Función para obtener los mensajes de un hilo en Slack utilizando slack_sdk
+def getThreadMessages(channel_id, thread_id):
+    try:
+        # Llamar al método conversations.replies para obtener los mensajes del hilo
+        response = slack_client.conversations_replies(channel=channel_id, ts=thread_id)
+        
+        # Extraer los mensajes del hilo
+        messages = response['messages']
+        return messages
+    except SlackApiError as e:
+        print(f"Error al obtener los mensajes del hilo de Slack: {e.response['error']}")
+    return []
+
+
+def getEventInfo(event):
+    try:
+        if not isinstance(event, str):
+            event = json.dumps(event)
+        data = json.loads(event)
+
+        sender_id = data.get('user')
+        channel_id = data.get('channel')
+        message = data.get('text')
+        message_id = data.get('ts')
+        thread_id = data.get('thread_ts')
+        username = getSlackUserName(sender_id)
+        channel_name = getSlackChannelName(channel_id)
+
+        payload = {
+            'sender_id': sender_id,
+            'channel_id': channel_id,
+            'username': username,
+            'channel_name': channel_name,
+            'message': message,
+            'message_id': message_id,
+            'thread_id': thread_id
+        }
+        return payload
+    except json.JSONDecodeError as e:
+        glados_mqtt.debug("Error al procesar mensaje para Slack (nombre): " + str(e))
+        return False
+
+
+def editSlackMsg(channel_id, message_timestamp, new_msg):
+    try:
+        slack_client.chat_update(channel=channel_id, ts=message_timestamp, text=new_msg)
+    except SlackApiError as e:
+        glados_mqtt.debug(f"Error editing message in Slack: {e}")
+
+def processThreadMessages(channel_id, thread_id):
+    # Directly get the thread messages without json.loads since getThreadMessages already returns a list
+    thread_messages = getThreadMessages(channel_id, thread_id)
+    processed_messages = []
+    for message in thread_messages:
+        payload = getEventInfo(message)
+        processed_messages.append(payload)
+    
+    return processed_messages
+
+# Función para procesar los eventos entrantes de Slack
+def processSlackEvents(event):
+    try:
+        if not isinstance(event, str):
+            event = json.dumps(event)
+        data = json.loads(event)
+        subtype = ""
+        if 'subtype' in data :
+            subtype = data['subtype']
+        if data['type'] != "message" or 'bot_id' in data or 'app_id' in data or subtype == "thread_broadcast" or subtype=="message_changed":
+            return False
+
+        payload = getEventInfo(event)
+        # Send a reply that we are 'Working' on it
+        response = slack_client.chat_postMessage(channel=payload['channel_id'], text="Recibido, consultando LLM...",
+                                                 thread_ts=payload['message_id'] if payload.get('thread_id') else None)
+        # Extract and publish the message id of the reply
+        payload['reply_msg_id']= response['message']['ts']
+
+        # Si el mensaje está en un hilo, obtener el hilo completo
+        if payload['thread_id'] :
+            thread_messages = processThreadMessages(payload['channel_id'], payload['thread_id'])
+            payload['thread_messages'] = thread_messages
+
+        glados_mqtt.publish(topic_slack_incoming_msg, json.dumps(payload))
+    except json.JSONDecodeError as e:
+        glados_mqtt.debug("Error al procesar mensaje para Slack (nombre): " + str(e))
+        return False
 
 # Función para enviar un mensaje a Slack por ID de usuario o canal
 def sendSlackMsgbyID(channel_id, msg):
@@ -119,8 +241,8 @@ def sendSlackMsgbyID(channel_id, msg):
 # Función para enviar un mensaje a Slack por nombre de usuario o canal
 def sendSlackMsgbyName(name, msg):
     # Determinar si es un usuario o un canal y obtener su ID
-    is_user = getSlackUserId(name)
-    is_channel = getSlackChannelId(name) if not is_user else None
+    is_user = getSlackUserName(name)
+    is_channel = getSlackChannelName(name) if not is_user else None
     target_id = is_user or is_channel
 
     if target_id:
@@ -131,29 +253,23 @@ def sendSlackMsgbyName(name, msg):
     else:
         glados_mqtt.debug("Usuario o canal no encontrado en Slack")
 
-# Función para obtener el ID de un canal de Slack por su nombre
-def getSlackChannelId(channel_name):
-    try:
-        response = slack_client.conversations_list()
-        for channel in response['channels']:
-            if channel['name'] == channel_name:
-                return channel['id']
-        return None
-    except SlackApiError as e:
-        glados_mqtt.debug(f"Error al obtener ID del canal de Slack: {e}")
-        return None
+# Actualizado para usar caché
+def getSlackChannelName(channel_id):
+    if channel_id in cached_slack_channels:
+        return cached_slack_channels[channel_id]
+    else:
+        # Recargar caché si el canal no se encuentra
+        cache_slack_channels()
+        return cached_slack_channels.get(channel_id, None)
 
-# Función para obtener el ID de un usuario de Slack por su nombre
-def getSlackUserId(user_name):
-    try:
-        response = slack_client.users_list()
-        for user in response['members']:
-            if 'name' in user and user['name'] == user_name:
-                return user['id']
-        return None
-    except SlackApiError as e:
-        glados_mqtt.debug(f"Error al obtener ID de usuario de Slack: {e}")
-        return None
+# Actualizado para usar caché
+def getSlackUserName(user_id):
+    if user_id in cached_slack_users:
+        return cached_slack_users[user_id]
+    else:
+        # Recargar caché si el usuario no se encuentra
+        cache_slack_users()
+        return cached_slack_users.get(user_id, None)
 
 # Función para publicar una vista en el "home" de un usuario en Slack
 def publishHomeView(user_id, view):
@@ -162,35 +278,31 @@ def publishHomeView(user_id, view):
     except SlackApiError as e:
         glados_mqtt.debug(f"Error al publicar vista en Slack: {e}")
 
+
 # Rutas Flask
 @app.route('/slack/events', methods=['POST'])
 def slack_events():
-	data = request.json
-	glados_mqtt.debug(f"Evento de Slack recibido: {data}")
+    data = request.json
+    # Desafío de URL para la verificación con Slack
+    if data.get('type') == 'url_verification':
+        return jsonify({'challenge': data.get('challenge')})
 
-	# Desafío de URL para la verificación con Slack
-	if data.get('type') == 'url_verification':
-		return jsonify({'challenge': data.get('challenge')})
+    # Manejo de eventos de callback
+    if data.get('type') == 'event_callback':
+        event = data.get('event', {})
+        glados_mqtt.publish(topic_slack_event, json.dumps(event)) # Enviamos el evento a la cola mqtt
+        processSlackEvents(event)
 
-	# Manejo de eventos de callback
-	if data.get('type') == 'event_callback':
-		event = data.get('event', {})
-		# Ejemplo: Manejo de mensajes nuevos
-		glados_mqtt.publish(topic_slack_event, json.dumps(event)) # Enviamos el evento a la cola mqtt
-		if event.get('type') == 'message' and not event.get('subtype'):
-			user_id = event.get('user')
-			text = event.get('text')
-			channel = event.get('channel')
-			# Aquí puedes implementar la lógica para responder al mensaje
-			# Por ejemplo, podrías enviar un mensaje de respuesta
-			# sendSlackMsgbyID(channel, f"Recibido tu mensaje: {text}")
-		if event.get('type') == 'app_home_opened':
-			user_id = event.get('user')
-			if user_id:
-				publishHomeView(user_id)
+        if event.get('type') == 'app_home_opened':
+            user_id = event.get('user')
+            if user_id:
+                publishHomeView(user_id)
 
-	return jsonify({'status': 'ok'}), 200
+    return jsonify({'status': 'ok'}), 200
 
 if __name__ == "__main__":
+    # Cargar listas en caché antes de iniciar el MQTT y Flask
+    cache_slack_channels()
+    cache_slack_users()
     glados_mqtt.init_mqtt()
     app.run(host='0.0.0.0', port=slack_port)
