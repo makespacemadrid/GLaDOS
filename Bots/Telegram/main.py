@@ -19,6 +19,9 @@ mqHost = os.environ.get("MQTT_HOST")
 mqPort = int(os.environ.get("MQTT_PORT"))
 nodeName = platform.node()
 
+tts_url = os.environ.get("TTS_URL")
+
+
 if not telegram_token:
     raise ValueError("No se encontró el token del bot de Telegram.")
 if not api_hash:
@@ -53,25 +56,24 @@ def on_mqtt_message(client, userdata, msg):
 
 
 def generate_and_send_audio_response(user_id, text):
-    coquiurl = "http://coqui-es.makespacemadrid.org"  # Reemplaza con la URL de tu API de Coqui TTS
-    params = {
+    tts_url = tts_url  # Reemplaza con la URL de tu API de Coqui TTS
+    headers = {'Content-Type': 'application/json'}
+    data = {
         "text": text,
-        "speaker_id": "",
-        "style_wav": "",
-        "language_id": "es"
+        "language": "es"
     }
 
     try:
-        coqui_response = requests.get(coquiurl, params=params)
-        coqui_response.raise_for_status()  # Esto provocará una excepción si la respuesta no es exitosa
+        # Cambia a usar requests.post y envía los datos como JSON en el cuerpo de la petición
+        tts_response = requests.post(tts_url, json=data, headers=headers)
+        tts_response.raise_for_status()  # Esto provocará una excepción si la respuesta no es exitosa
 
         # Enviar el audio directamente a Telegram sin guardar en disco
-        audio_bytes = BytesIO(coqui_response.content)
-        audio_bytes.name = "glados.wav"
+        audio_bytes = BytesIO(tts_response.content)
+        audio_bytes.name = "response.wav"
         send_telegram_audio_sync(user_id, audio_bytes)
     except requests.RequestException as e:
         glados_mqtt.debug(f"Error al generar respuesta de audio: {e}")
-
 
 async def send_audio_to_transcription_api(audio_file_path):
     url = "https://whisper.makespacemadrid.org/asr"
