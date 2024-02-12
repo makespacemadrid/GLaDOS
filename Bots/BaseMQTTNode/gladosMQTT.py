@@ -8,6 +8,7 @@ class GladosMQTT:
         self.mqttPort = port
         self.nodeName = name
         self.baseTopic = "node/" + self.nodeName
+        self.statusTopic = self.baseTopic+'/status'
         self.debugTopic = self.baseTopic + "/debug"
         self.mqttClient = mqtt.Client()
         self.topics = []
@@ -16,6 +17,8 @@ class GladosMQTT:
         self.mqttClient.on_connect = self.on_connect
         self.mqttClient.on_message = self.on_message
         self.mqttClient.on_disconnect = self.on_disconnect
+        self.mqttClient.will_set(self.statusTopic,'OFFLINE', int(2), True)
+
 
     def set_topics(self, topics):
         self.topics = topics
@@ -24,7 +27,7 @@ class GladosMQTT:
         self.debug("Dummy function called")
 
     def publish(self, topic, msg, persist=False):
-        self.mqttClient.publish(topic, msg, persist)
+        self.mqttClient.publish(topic, msg,int(2), persist)
 
     def debug(self, msg):
         if not isinstance(msg, str):
@@ -38,8 +41,9 @@ class GladosMQTT:
 
     def on_connect(self, client, userdata, flags, rc):
         self.debug("[GladosNode] Connected with result code " + str(rc))
+        self.mqttClient.publish(self.statusTopic,'ONLINE', int(2))
         for topic in self.topics:
-            self.mqttClient.subscribe(topic)
+            self.mqttClient.subscribe(topic,int(2))
 
     def on_message(self, client, userdata, msg):
 #        try:

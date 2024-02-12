@@ -211,7 +211,12 @@ def processSlackEvents(event):
         subtype = ""
         if 'subtype' in data :
             subtype = data['subtype']
-        if data['type'] != "message" or 'bot_id' in data or 'app_id' in data or subtype == "thread_broadcast" or subtype=="message_changed":
+        if (
+            data['type'] != "message" or 
+            'bot_id' in data or 
+            'app_id' in data or
+            subtype in ("thread_broadcast", "message_changed", "message_deleted")
+        ):
             return False
 
         payload = getEventInfo(event)

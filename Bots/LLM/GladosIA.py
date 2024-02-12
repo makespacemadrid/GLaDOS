@@ -1,7 +1,10 @@
-import llm
+from llm import LLM
 from UserContext import UserContext  # Import UserContext
 import os
 import requests
+
+
+llm = LLM()
 
 def get_spaceapi_info(url):
     try:
@@ -71,8 +74,6 @@ class GladosBot:
             extraPrompt += spaceStatus
         self.user_context[user].set_system_prompt_extra(extraPrompt)
 
-
-
         #Gestion de comandos
         if prompt.lower() == "reset context":
             #self.user_context[user].reset_history()
@@ -85,8 +86,9 @@ class GladosBot:
         #Gestion de respuestas
         self.user_context[user].add_to_history("user",prompt)
         #gladosMQTT.debug(self.user_context[user].get_combined_prompt())
-        response = llm.chatCompletion(user_context=self.user_context[user]).choices[0].message.content
-#        response = llm.chatCompletionLangChain(self.user_context[user],"langchain.txt")
+        result = llm.chatCompletion(user_context=self.user_context[user])
+        if 'error' in result:
+            return result['error']
+        response = result.choices[0].message.content
         self.user_context[user].add_to_history("assistant",response)
-
         return response
