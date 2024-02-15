@@ -1,9 +1,9 @@
 version: '3'
 services:
-  mqtt-llm:
+  mqtt-telegram:
     build: .
-    image: makespacemadrid/glados-mqtt-llm:latest
-    hostname: mqtt-llm
+    image: makespacemadrid/glados-mqtt-telegram:latest
+    hostname: mqtt-telegram
     env_file:
       - .env
     volumes:

@@ -1,2 +1,7 @@
 paho-mqtt
 openai
+langchain
+chromadb
+tiktoken
+requests
+numpy

@@ -1,9 +1,11 @@
 version: '3'
+
+
 services:
-  mqtt-llm:
+  mqtt-slack:
     build: .
-    image: makespacemadrid/glados-mqtt-llm:latest
-    hostname: mqtt-llm
+    image: makespacemadrid/glados-mqtt-calendar:latest
+    hostname: mqtt-calendar
     env_file:
       - .env
     volumes:

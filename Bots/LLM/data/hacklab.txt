@@ -1,0 +1,14 @@
+Un hacklab (en español: laboratorio hacker), también conocido como hackspace o hackerspace (en español: espacio de hackers), es un sitio físico de encuentro para conocer, socializar y colaborar con gente con intereses en ciencia, en nuevas tecnologías, en artes digitales o electrónicas, así como en tópicos cercanos o relacionados con los recién citados. Dicho sitio puede ser visto como un laboratorio de comunidad abierta, como un espacio donde gente de diversos trasfondos puede unirse, poniendo así al alcance de aficionados y estudiantes de diferentes niveles, la infraestructura y el ambiente necesarios para desarrollar y profundizar en sus propios proyectos tecnológicos. El propósito de un hackspace es pues, concentrar recursos y conocimientos para fomentar la investigación y el desarrollo en esas temáticas recién enumeradas.
+
+Actividades
+En un hacklab suele utilizarse un sistema de organización y aprendizaje cooperativo aplicando software libre, debido a las libertades que así se ofrecen (autoaprendizaje y conocimiento libre). Existe un importante componente ideológico en la organización de los hacklabs1​2​, mientras que los hackerspaces no suelen enfocarse como militancia o activismo, ambos son lugares para socializar, aprender y experimentar con tecnologías.
+
+Los hacklabs se caracterizan, frente a los hackerspaces, por su carácter de crítica social: un hacklab es un colectivo de personas críticas con las implicaciones éticas y sociales de las tecnologías especialmente la informática y que además de estudio y análisis realiza difusión social y busca ofrecer alternativas3​. Por ejemplo, los hacklabs por definición usan y promueven software libre4​ mientras que no es una condición de los hackerspaces5​.
+
+Además suelen ofrecer las siguientes oportunidades:
+
+Organización de cursos de tecnología (programación, electrónica, y diseño mecánico, a todos los niveles).
+Posibilidades de participación en el desarrollo de proyectos grupales.
+Espacio o lugar para investigar, debatir, y difundir, en cuanto a temas relacionados con Internet, con las nuevas tecnologías, y con las libertades y derechos.
+Realización de actividades sociales y de intercambio relacionadas.
+En 2022, el sitio hackerspaces.org que recopila hackspaces, hacklabs y makerspaces, mantiene un listado de 856 grupos activos6​.

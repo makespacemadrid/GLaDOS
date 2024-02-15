@@ -1,0 +1,11 @@
+version: '3'
+
+
+services:
+  mqtt-discord:
+    build: .
+    image: makespacemadrid/glados-mqtt-discord:latest
+    hostname: mqtt-discord
+    env_file:
+      - .env
+    restart: always
