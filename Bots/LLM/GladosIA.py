@@ -1,5 +1,5 @@
 from llm import LLM
-from UserContext import UserContext  # Import UserContext
+from UserContext import UserContext 
 import os
 import requests
 
@@ -42,7 +42,9 @@ def get_spaceapi_info(url):
 
 
             # Crear una cadena con los campos relevantes y sus valores, incluyendo el estado de apertura/cierre
-            info_str = f"Reporte actualizado del sistema domotico con el estado del espacio: Space Name: {space_name}\nSpace URL: {space_url}\nAddress: {address}\nLatitude: {lat}\nLongitude: {lon}\nPhone: {phone}\nEmail: {email}\nStatus: {open_status}\nSensors:\n{', '.join(sensor_info)}"
+            info_str =  f"**Informacion de contacto de MakeSpace Madrid: \nSpace URL: {space_url}\nAddress: {address}\nLatitude: {lat}\nLongitude: {lon}\nPhone: {phone}\nEmail: {email}\n "
+            info_str += f"**Informacion de estado y sensores: \n OpenStatus: {open_status}\nSensors:\n{', '.join(sensor_info)}\n"
+            info_str += "**Eventos: \n todavia no podemos obtener la informacion en tiempo real de los eventos. Sin embargo hay los siguintes eventos recurrentes: \n - Martes abiertos a partir de las 19\n - Jueves y Viernes 10 a 17 Impress3D - Fundacion amas\n -Taller de sintetizadores el primer jueves de cada mes."
             return info_str
         else:
             return "Error: No se pudo obtener el JSON."
@@ -56,7 +58,7 @@ class GladosBot:
         self.GLaDOS_Prompt = os.environ.get('GLADOS_MASTER_PROMPT')
         self.Initial_Assistant = os.environ.get('GLADOS_INITIAL_PROMPT')
         self.debug = debug if debug else self.default_debug  # Utiliza la función de depuración por defecto si no se proporciona una
-
+        self.default_model=os.environ.get('DEFAULT_MODEL')
         # Historial de conversaciones, almacenado por usuario
         self.user_context = {}
 
@@ -68,7 +70,7 @@ class GladosBot:
         if user not in self.user_context:
             self.user_context[user] = UserContext(self.GLaDOS_Prompt,self.Initial_Assistant)  # Create a UserContext for the user
             self.user_context[user].add_to_history("assistant",self.Initial_Assistant)
-        extraPrompt = "informacion que puede ser relevante en las consultas posteriores: \n"
+        extraPrompt = "*Informacion que puede ser relevante en las consultas posteriores: \n"
         spaceStatus = get_spaceapi_info(os.environ.get('SPACEAPI_URL'))
         if spaceStatus:
             extraPrompt += spaceStatus
@@ -86,9 +88,13 @@ class GladosBot:
         #Gestion de respuestas
         self.user_context[user].add_to_history("user",prompt)
         #gladosMQTT.debug(self.user_context[user].get_combined_prompt())
-        result = llm.chatCompletion(user_context=self.user_context[user])
+        result = llm.chatCompletion(user_context=self.user_context[user])        
         if 'error' in result:
             return result['error']
         response = result.choices[0].message.content
         self.user_context[user].add_to_history("assistant",response)
         return response
+
+
+    
+ 

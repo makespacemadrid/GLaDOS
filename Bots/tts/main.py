@@ -39,26 +39,9 @@ tts = TTS(tts_model).to(device)
 # Carga el modelo y el vocoder
 model_path = "/data/glados.pth"  # Actualiza esto con la ruta de tu modelo
 config_path = "/data/glados_tts.json"  # Actualiza esto con la ruta de tu configuración
-#synthesizer = Synthesizer(model_path, config_path)
+synthesizer = Synthesizer(model_path, config_path)
 
 app = Flask(__name__)
-
-# Función para manejar mensajes MQTT
-def on_mqtt_message(client, userdata, msg):
-    global last_open_status
-    global report_open
-
-    # Manejar mensaje de SpaceAPI
-    if msg.topic == topic_spaceapi:
-        try:
-            payload = msg.payload.decode('utf-8')
-            data = json.loads(payload)
-            open_status = data['state']['open']
-            openSpace(open_status)
-        except json.JSONDecodeError as e:
-            glados_mqtt.debug("Error al parsear JSON: " + str(e))
-
-
 
 @app.route('/synthesize', methods=['POST'])
 def synthesize():
@@ -71,8 +54,8 @@ def synthesize():
 
     if not language:
         language = 'es'
-    wav = tts.tts(text=text, speaker_wav='/data/glados.wav', language=language)
-#    wav = synthesizer.tts(text)
+#    wav = tts.tts(text=text, speaker_wav='/data/glados.wav', language=language)
+    wav = synthesizer.tts(text)
     # Guarda el archivo de audio temporalmente
     with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp:
         sf.write(tmp, wav, 22050)  # Asumiendo que la frecuencia de muestreo es 22050 Hz

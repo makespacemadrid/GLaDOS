@@ -1,0 +1,6 @@
+openai
+langchain
+chromadb
+tiktoken
+requests
+numpy

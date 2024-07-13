@@ -1,0 +1,6 @@
+version: '3'
+services:
+  glados_bot-base:
+    build: .
+    image: makespacemadrid/glados-bot-base:1.0
+    hostname: glados-bot-base

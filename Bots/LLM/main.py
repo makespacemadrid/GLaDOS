@@ -28,6 +28,7 @@ topic_discord_event = "comms/discord/event"
 topic_slack_send_msg_id = "comms/slack/send_id"
 topic_slack_edit_msg = "comms/slack/edit_msg"
 topic_telegram_send_msg_id ="comms/telegram/send_id"
+topic_telegram_edit_msg    ="comms/telegram/edit_msg"
 topic_discord_send_msg_id ="comms/discord/send_id"
 
 # Instancia de GladosMQTT
@@ -60,12 +61,12 @@ def processSlackMSG(event) :
 		event = json.dumps(event)
 	data = json.loads(event)
 
-	sender_id = data.get('sender_id')
-	channel_id = data.get('channel_id')
-	message = data.get('message')
-	message_id = data.get('message_id')
-	thread_id = data.get('thread_id')
-	username = data.get('username')
+	sender_id    = data.get('sender_id')
+	channel_id   = data.get('channel_id')
+	message      = data.get('message')
+	message_id   = data.get('message_id')
+	thread_id    = data.get('thread_id')
+	username     = data.get('username')
 	channel_name = data.get('channel_name')
 	reply_msg_id = data.get('reply_msg_id')
 
@@ -81,53 +82,23 @@ def processSlackMSG(event) :
 
 
 # Funciones para procesar eventos de Slack, Telegram y Discord
-def processSlackEvent(event):
-    glados_mqtt.debug("--->SLACK event ------------------")
-    glados_mqtt.debug(event)
-    glados_mqtt.debug("/SLACK event ------------------")
-    try:
-        data = json.loads(event)
-        if data['type'] != "message" or 'bot_id' in data:
-            return False
-    except:
-        glados_mqtt.debug("processSlackEvent: Error procesando JSON")
-        return False
-
-    # Procesar diferentes tipos de eventos de Slack aquí
-    # Puedes manejar eventos de unión a canales, mensajes en canales, mensajes privados, etc.
-
-    # Ejemplo: Mensajes de unión a canal
-    if 'subtype' in data and data['subtype'] == "channel_join":
-        respondTo = data['channel']
-        msg = data['text']
-        response = gladosBot.ask(msg, respondTo)
-        sendToSlack(respondTo, response)
-
-    # Ejemplo: Mensaje a canal
-    elif data['channel_type'] == "channel":
-        respondTo = data['channel']
-        msg = data['text']
-        if '<@U05LXTJ7Q66>' in msg or 'glados' in msg.lower():
-            response = gladosBot.ask(msg, respondTo)
-            sendToSlack(respondTo, response)
-
-    # Ejemplo: Mensaje privado
-    elif data['channel_type'] == "im":
-        respondTo = data['user']
-        msg = data['text']
-        response = gladosBot.ask(msg, respondTo)
-        sendToSlack(respondTo, response)
 
 def processTelegramEvent(event):
-	glados_mqtt.debug("---> TELEGRAM event ------------------")
-	glados_mqtt.debug(event)
-	glados_mqtt.debug("/ TELEGRAM event ------------------")
  #   try:
 	data = json.loads(event)
 	respondTo = data['sender_id']
 	msg = data['message_text']
 	response = gladosBot.ask(msg, respondTo)
-	sendToTelegram(respondTo, response)
+	payload = {
+		'sender_id': data['sender_id'],
+		'channel_id': data['channel_id'],
+		'message_text': response,
+		'reply_msg_id': data['reply_msg_id']
+	}
+	
+	glados_mqtt.publish(topic_telegram_edit_msg, json.dumps(payload))
+
+#	sendToTelegram(respondTo, response)
  #   except:
  #       glados_mqtt.debug("processTelegramEvent: Error procesando JSON")
  #       return False
@@ -139,7 +110,7 @@ def processDiscordEvent(event):
 	glados_mqtt.debug("/ DISCORD event ------------------")
 	#   try:
 	data = json.loads(event)
-	respondTo = data['channel_id']
+	respondTo = str(data['channel_id'])
 	msg = data['content']
 	response = gladosBot.ask(msg, respondTo)
 	sendToDiscord(respondTo, response)
@@ -160,9 +131,10 @@ def sendToTelegram(id, msg):
 
 # Enviar mensaje a Discord por ID de usuario o canal
 def sendToDiscord(id, msg):
-    response = json.dumps({"dest": id, "msg": msg})
-    glados_mqtt.debug(f"---> Respuesta a Discord: {response}")
-    glados_mqtt.publish(topic_discord_send_msg_id, response)
+	response = json.dumps({"dest": id , "msg": msg})
+	glados_mqtt.debug(f'WTF id: {id}  response; {response}')
+	glados_mqtt.debug(f"---> Respuesta a Discord: {response}")
+	glados_mqtt.publish(topic_discord_send_msg_id, response)
 
 
 if __name__ == "__main__":

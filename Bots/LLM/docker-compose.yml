@@ -1,6 +1,6 @@
 version: '3'
 services:
-  mqtt-llm:
+  glados-llm:
     build: .
     image: makespacemadrid/glados-mqtt-llm:latest
     hostname: mqtt-llm
@@ -8,4 +8,4 @@ services:
       - .env
     volumes:
       - ./data:/data
-    restart: always
+    restart: alwaysm

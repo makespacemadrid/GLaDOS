@@ -15,7 +15,7 @@ slack_token = os.environ.get("SLACK_API_TOKEN")
 slack_port = os.environ.get("SLACK_PORT")
 
 # Variables globales para mantener el estado
-last_open_status = False
+last_open_status = None
 report_open = True
 
 # Verificación de variables críticas
@@ -36,7 +36,7 @@ topic_slack_edit_msg = topic_slack+"/edit_msg"
 
 # Instancia de GladosMQTT
 glados_mqtt = GladosMQTT(host=mqHost, port=mqPort, name=nodeName)
-glados_mqtt.set_topics([topic_spaceapi, topic_last_open_status, topic_slack_send_msg_id, topic_slack_send_msg_name,topic_slack_edit_msg])
+glados_mqtt.set_topics([topic_last_open_status,topic_spaceapi, topic_slack_send_msg_id, topic_slack_send_msg_name,topic_slack_edit_msg])
 
 # Cliente de Slack
 slack_client = WebClient(token=slack_token)
@@ -98,23 +98,23 @@ def on_mqtt_message(client, userdata, msg):
 def openSpace(status):
     global last_open_status
     global report_open
-
-    if not report_open:
-        return
+    if last_open_status is None :
+        last_open_status = status == 'false' #Si por alguna razon last_status no esta inicializado cargamos el valor contratio para que si mande el mensaje.
 
     if status and not last_open_status:
         glados_mqtt.debug("Espacio abierto")
         glados_mqtt.publish(topic_last_open_status, 'true', True)
         last_open_status = True
-        sendSlackMsgbyName("abierto-cerrado", "¡Espacio Abierto! Let's Make!")
-        glados_mqtt.publish(topic_slack_send_msg_name, json.dumps({'dest': "abierto-cerrado", 'msg': "¡Espacio Abierto! Let's Make!"}), True)
+        if report_open :
+            sendSlackMsgbyName("abierto-cerrado", "¡Espacio Abierto! Let's Make!")
     elif not status and last_open_status:
         glados_mqtt.debug("Espacio cerrado")
         glados_mqtt.publish(topic_last_open_status, 'false', True)
         last_open_status = False
-        sendSlackMsgbyName("abierto-cerrado", "¡Espacio Cerrado! ZZzzZZ")
+        if report_open :
+            sendSlackMsgbyName("abierto-cerrado", "¡Espacio Cerrado! ZZzzZZ")
 
-        glados_mqtt.publish(topic_slack_send_msg_name, json.dumps({'dest': "abierto-cerrado", 'msg': "¡Espacio Cerrado! ZZzzZZ"}), True)
+
 # Configuración de callbacks MQTT
 glados_mqtt.mqttClient.on_message = on_mqtt_message
 
@@ -218,6 +218,12 @@ def processSlackEvents(event):
             subtype in ("thread_broadcast", "message_changed", "message_deleted")
         ):
             return False
+        if data['channel_type'] == "channel":
+            respondTo = data['channel']
+            msg = data['text']
+            # Si es un mensaje en un canal pero no se nos menciona no respondemos.
+            if not ('<@U05LXTJ7Q66>' in msg or 'glados' in msg.lower()):
+                return
 
         payload = getEventInfo(event)
         # Send a reply that we are 'Working' on it
@@ -287,23 +293,28 @@ def publishHomeView(user_id, view):
 # Rutas Flask
 @app.route('/slack/events', methods=['POST'])
 def slack_events():
-    data = request.json
-    # Desafío de URL para la verificación con Slack
-    if data.get('type') == 'url_verification':
-        return jsonify({'challenge': data.get('challenge')})
+    try:
+        data = request.json
+        # Desafío de URL para la verificación con Slack
+        if data.get('type') == 'url_verification':
+            return jsonify({'challenge': data.get('challenge')}), 200
 
     # Manejo de eventos de callback
-    if data.get('type') == 'event_callback':
-        event = data.get('event', {})
-        glados_mqtt.publish(topic_slack_event, json.dumps(event)) # Enviamos el evento a la cola mqtt
-        processSlackEvents(event)
+        if data.get('type') == 'event_callback':
+            event = data.get('event', {})
+            glados_mqtt.publish(topic_slack_event, json.dumps(event))  # Enviamos el evento a la cola mqtt
+            processSlackEvents(event)
 
-        if event.get('type') == 'app_home_opened':
-            user_id = event.get('user')
-            if user_id:
-                publishHomeView(user_id)
+            if event.get('type') == 'app_home_opened':
+                user_id = event.get('user')
+                if user_id:
+                    publishHomeView(user_id)
 
-    return jsonify({'status': 'ok'}), 200
+    except Exception as e:
+        glados_mqtt.debug(f'Error procesando el evento de slack: {e}')
+    finally:
+        # Usamos el bloque finally para asegurarnos de que siempre ejecutamos el retorno.
+        return jsonify({'status': 'ok'}), 200
 
 if __name__ == "__main__":
     # Cargar listas en caché antes de iniciar el MQTT y Flask

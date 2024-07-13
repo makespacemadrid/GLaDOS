@@ -2,7 +2,7 @@ version: '3'
 
 
 services:
-  mqtt-slack:
+  glados-slack:
     build: .
     image: makespacemadrid/glados-mqtt-slack:latest
     hostname: mqtt-slack

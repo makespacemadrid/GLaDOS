@@ -1,0 +1,8 @@
+version: '3'
+services:
+  bridge-ollama-litellm:
+    build: .
+    image: makespacemadrid/olm-bridge:1.0
+    hostname: bridge-ollama-litellm
+    env_file:
+      - .env
