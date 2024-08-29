@@ -23,7 +23,7 @@ You can optionally set the stock of the machine via MQTT by posting a JSON messa
 
 After the stock is set, you will be able to monitor the current state of the stock of the machine as well as the initial IP given to it on WiFi connection at topic `smartfridge/current-stock`.
 
-When a can is deliveres, the value of the stock will be updated and submitted over the MQTT queue.
+When a can is delivered, the value of the stock will be updated and submitted over the MQTT queue.
 
 ## SecDevOps
 
