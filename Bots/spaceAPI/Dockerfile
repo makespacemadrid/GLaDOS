@@ -1,5 +1,5 @@
 # Utiliza una imagen base que ya tiene el cliente mqtt
-FROM makespacemadrid/glados-base-node:1.0
+FROM makespacemadrid/glados-base-node:1.5
 
 # Establece el directorio de trabajo en /app
 WORKDIR /app
