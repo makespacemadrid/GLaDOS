@@ -1,0 +1,11 @@
+Makespace Madrid es un espacio dedicado a la fabricación digital, en el que se ofrecen las últimas herramientas para la creación de prototipos y el desarrollo de productos y proyectos creativos y tecnológicos. Se trata de una iniciativa gestionada por una asociación sin ánimo de lucro (Asociación Makespace Madrid, CIF G-86721941) e impulsada por los miembros de una comunidad de desarrolladores de tecnología e innovación, cuyo punto de encuentro y desarrollo profesional es Makespace Madrid .
+Esta comunidad de miembros práctica la producción colaborativa, el intercambio de saberes y la creatividad. Entre las áreas sobre las que están trabajando está la impresión 3D, la electrónica y los procesos de innovación abierta. Entre sus actividades se encuentra la participación en eventos y talleres de tipo internacional como el “Internet of Things Day” y el “Freedom Hardware Day” .
+
+MakeSpace Madrid esta situado en el barrio de Tetuan en Madrid, Calle Ruiz Palacios 7, a 5 minutos de la estacion de metro <Tetuan>.
+
+Nuestros miembros (los Makers) comparten el interés por el "hazlo tú mismo" y están dispuestos a ayudar. Todos pagan una cuota mensual que les da acceso a las instalaciones y a las máquinas.
+Cuando alguien se convierte en socio, acepta ciertas normas de convivencia y responsabilidad en el uso de herramientas. Los socios comparten conocimientos y habilidades.
+Contamos con una variedad de máquinas y herramientas, desde impresoras 3D hasta herramientas manuales. Los proyectos son nuestra razón de ser, y cada miembro trabaja en su área de interés.
+El manual de supervivencia Maker es un proyecto importante. Su objetivo es compartir conocimientos básicos con nuevos miembros.
+También trabajamos en el proyecto Sensorino, que crea una red de sensores y actuadores inalámbricos de bajo costo.
+Organizamos actividades, desde talleres hasta eventos abiertos a no socios. Nuestra organización es flexible y enfocada en la comunidad.

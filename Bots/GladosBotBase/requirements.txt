@@ -1,4 +1,3 @@
-paho-mqtt
 openai
 langchain
 chromadb

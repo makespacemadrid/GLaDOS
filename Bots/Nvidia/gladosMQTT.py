@@ -2,7 +2,6 @@
 import paho.mqtt.client as mqtt
 import json
 
-
 class GladosMQTT:
     def __init__(self, host="192.168.1.1", port=1883, name="test-node", msg_callback=None):
         self.mqttServer = host
@@ -20,7 +19,6 @@ class GladosMQTT:
         self.mqttClient.on_disconnect = self.on_disconnect
         self.mqttClient.will_set(self.statusTopic,'OFFLINE', int(2), True)
 
-    
 
     def set_topics(self, topics):
         self.topics = topics
@@ -28,8 +26,8 @@ class GladosMQTT:
     def dummy(self, *args, **kwargs):
         self.debug("Dummy function called")
 
-    def publish(self, topic, msg,qos=2,persist=False):
-        self.mqttClient.publish(topic, msg,qos, persist)
+    def publish(self, topic, msg, persist=False):
+        self.mqttClient.publish(topic, msg,int(2), persist)
 
     def debug(self, msg):
         if not isinstance(msg, str):

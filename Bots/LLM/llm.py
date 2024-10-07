@@ -1,59 +1,45 @@
-import openai
 from openai import OpenAI
 import os
-
-openai_api_key = os.environ.get('OPENAI_API_TOKEN')
-openai_api_url = os.environ.get('OPENAI_API_ENDPOINT')
-custom_api_key = os.environ.get('MKSLLM_API_TOKEN')
-custom_api_url = os.environ.get('MKSLLM_API_ENDPOINT')
+import json
 
 
-llm_openai = OpenAI(api_key=openai_api_key,base_url=openai_api_url)
-llm_mks    = OpenAI(api_key=custom_api_key,base_url=custom_api_url)
+class LLM:
+    def __init__(self, default_model="text-davinci-003"):
+        self.default_prompt = "Eres un asistente que ayuda a los usuarios dando respuestas concisas y breves"
+        self.api_key  = os.environ.get('LITTLELLM_API_KEY')
+        self.api_base = os.environ.get('LITTLELLM_API_BASE')
+        self.default_model = os.environ.get('DEFAULT_MODEL')
+        self.litellm=OpenAI(api_key=self.api_key,base_url=self.api_base)
 
+    def set_default_model(self, model_name):
+        self.default_model = model_name
 
+    def get_available_models(self):
+        models = self.litellm.Model.list()
+        return models
 
-current_model = "none"
-default_prompt = "Eres un asistente que ayuda a los usuarios dando respuestas concisas y breves"
-
-
-
-def select_model():
-    model_list = llm_mks.models.list()
-    global current_model
-    current_model = model_list.data[0].id
-    print(model_list.data)
-    print("Selected model:")
-    print(current_model)
-    return model_list
-
-
-def chatCompletion(prompt="", chatHistory="", masterPrompt="", initialAssistant="", maxTokens=256, langChainContext='none'):
-    global current_model
-    select_model()
-    result = ''
-
-    if (chatHistory == ''):
-        if (masterPrompt == ''):
-            masterPrompt = {"role": "system", "content": default_prompt}
-        if (initialAssistant != ''):
-            result = [masterPrompt, initialAssistant,
-                      {"role": "user", "content": prompt}]
+    def chatCompletion(self, prompt="", user_context=None, masterPrompt="", initialAssistant="", model=None, maxTokens=1024, stream=False, temperature=0.5):
+        if model is None:
+            model = self.default_model
+        if user_context :
+            model = user_context.get_model_name()
+        messages = []
+        if user_context is None:
+            # Usar prompts individuales
+            if masterPrompt:
+                messages.append({"role": "system", "content": masterPrompt})
+            if initialAssistant:
+                messages.append({"role": "assistant", "content": initialAssistant})
+            messages.append({"role": "user", "content": prompt})
         else:
-            result = [masterPrompt, {"role": "user", "content": prompt}]
-    else:
-        result = '['
-        for msg in chatHistory:
-            print(msg, flush=True)
-            result += str(msg)
-            result += ','
-        result += str({"role": "user", "content": prompt})
-        result += ']'
-    print("==============Lanzando peticion al LLM=======================")
-    print(result, flush=True)
+            # Usar historial
+            for msg in user_context.get_combined_prompt():
+                messages.append(msg)
 
-    completion = llm_mks.chat.completions.create(model=current_model, messages=result, max_tokens=maxTokens)
-    print("========LLM OUTPUT===============")
-#    print(completion.choices[0].message.content)
-    print(completion, flush=True)
-    return completion
+        try:
+            response = self.litellm.chat.completions.create(model=model, messages=messages, max_tokens=maxTokens, stream=stream, temperature=temperature)
+            return response
+        except Exception as e:
+            response = {}
+            response['error'] = str(e)
+            return response

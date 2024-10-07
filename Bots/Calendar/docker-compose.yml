@@ -1,0 +1,13 @@
+version: '3'
+
+
+services:
+  mqtt-slack:
+    build: .
+    image: makespacemadrid/glados-mqtt-calendar:latest
+    hostname: mqtt-calendar
+    env_file:
+      - .env
+    volumes:
+      - ./data:/data
+    restart: always
