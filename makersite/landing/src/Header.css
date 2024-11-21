@@ -1,0 +1,25 @@
+body {
+    background-color: #ffff00;
+    height: 100%;
+}
+
+#logo {
+}
+
+.row {
+    text-align: center;
+}
+
+.social-item {
+    display: inline;
+}
+
+.social-item > a{
+    text-decoration: none;
+}
+
+
+.social-img {
+    width: 3em;
+    height: auto;
+}
